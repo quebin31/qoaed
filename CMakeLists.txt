@@ -3,7 +3,7 @@ project(QOAED CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(TEST_SRC_DIR ${PROJECT_SOURCE_DIR}/test)
-set(TEST_BIN_DIR ${TEST_SRC_DIR}/bin)
+set(TEST_BIN_DIR ${PROJECT_SOURCE_DIR}/bin)
 
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
@@ -13,18 +13,17 @@ pkg_search_module(X11 REQUIRED x11)
 
 include_directories(inc)
 
-# TODO: Delete dummy target when test targets
-# get added, this is just for YCM completion
-add_executable(dummy ${TEST_SRC_DIR}/main.cc inc/quadtree.h inc/sfinae.h)
+add_executable(point_quadtree_test ${TEST_SRC_DIR}/point_quadtree.cc)
 
-#test targets should link with x11 libs
-#set_target_properties(
+#test targets using CImg should link with x11 libs
+set_target_properties(
+  point_quadtree_test
 
-	#PROPERTIES
+	PROPERTIES
 
-	#RUNTIME_OUTPUT_DIRECTORY "${TEST_BIN_DIR}"
+	RUNTIME_OUTPUT_DIRECTORY "${TEST_BIN_DIR}"
   #LINK_LIBRARIES           "${X11_LIBRARIES}"
-#)
+)
 
-#test targets should link with pthread library
+#test targets using CImg should link with pthread library
 #target_link_libraries(test_target pthread)
