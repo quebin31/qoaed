@@ -13,7 +13,7 @@ pkg_search_module(X11 REQUIRED x11)
 
 include_directories(inc)
 
-add_executable(point_quadtree_test ${TEST_SRC_DIR}/point_quadtree.cc)
+add_executable(point_quadtree ${TEST_SRC_DIR}/point_quadtree.cc)
 
 #test targets using CImg should link with x11 libs
 set_target_properties(

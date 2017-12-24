@@ -5,8 +5,6 @@
 #include <list>
 #include <set>
 
-#include "exceptions.h"
-
 namespace qoaed {
 
 template <class Value, class Key = unsigned long>
@@ -22,9 +20,7 @@ private:
     Childs childs;
 
     Node(const Key& x, const Key& y, const Value& val):
-      x(x), y(y), val(val) {
-        childs = {0, 0, 0, 0};
-      }
+      x(x), y(y), val(val) { childs = {0, 0, 0, 0}; }
   };
 
 public:
@@ -85,17 +81,15 @@ public:
     return node_set;
   }
 
-  /*
-  Nodes spherical_query(const Key& x, const Key& y, const Key& radius) {
-    if (!in_range(x,y)) return;
+  //Nodes spherical_query(const Key& x, const Key& y, const Key& radius) {
+    //if (!in_range(x,y)) return;
 
-  }
-  */
+  //}
 
 private:
 
   bool in_range(const Key& x, const Key& y) {
-    if (!max_x || !max_y) throw DimensionsMissing();
+    if (!max_x || !max_y) throw std::logic_error("Dimesions missing!");
 
     if (x >= max_x) return false;
     if (y >= max_y) return false;
