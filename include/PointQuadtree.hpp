@@ -4,6 +4,10 @@
 #include <set>
 #include <list>
 #include <array>
+#include <stack>
+#include <queue>
+#include <functional>
+
 
 namespace qoaed {
 
@@ -35,6 +39,7 @@ public:
     const Key& get_x() const { return n->x; }
     const Key& get_y() const { return n->y; }
     Value& operator*() const { return n->val; }
+    operator   bool()  const { return (bool) n; }
   };
 
   using Nodes = std::list<NodeVisitor>;
@@ -79,6 +84,49 @@ public:
   //Nodes spherical_query(const Key& x, const Key& y, const Key& radius) {
 
   //}
+  
+  void visit_dfs(std::function<void (const Node&)>& visitor, NodeVisitor start = 0) {
+    if (!m_root) return;
+
+    std::stack<Node*> cont;
+    if (!start)
+      start->n = m_root;
+
+    cont.push(start->n);
+    Node* tmp;
+    while (!cont.empty()) {
+      tmp = cont.top();
+            cont.pop();
+
+      visitor(*tmp);
+
+      for (int ii = 0; ii < 4; ++ii) 
+        if (tmp->childs[ii])
+          cont.push(tmp->childs[ii]);
+    }
+  }
+
+  void visit_bfs(std::function<void (const Node&)>& visitor, NodeVisitor start = 0) {
+    if (!m_root) return;
+
+    std::queue<Node*> cont;
+    if (!start)
+      start->n = m_root;
+
+
+    cont.push(start->n);
+    Node* tmp;
+    while (!cont.empty()) {
+      tmp = cont.front();
+            cont.pop();
+
+      visitor(*tmp);
+
+      for (int ii = 0; ii < 4; ++ii)
+        if (tmp->childs[ii])
+          cont.push(tmp->childs[ii]);
+    }
+  }
 
 private:
 
