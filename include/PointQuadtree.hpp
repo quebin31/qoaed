@@ -48,17 +48,14 @@ public:
 
     bool contains(const Key& x, const Key& y) const {
       bool cx, cy;
-
       cx = (x <= max_x && x >= min_x);
       cy = (y <= max_y && x >= min_y);
-
       return cx && cy;
     }
   };
 
 private:
   Node* m_root;
-  Key   max_x, max_y;
 
   static const int NW = 0;
   static const int NE = 1;
@@ -67,11 +64,9 @@ private:
 
 public:
 
-  PointQuadtree()                                   : m_root(0), max_x(0), max_y(0) {}
-  PointQuadtree(const Key& max_x, const Key& max_y) : m_root(0), max_x(max_x), max_y(max_y) {}
+  PointQuadtree() : m_root(0) {}
 
   void insert(const Key& x, const Key& y, const Value& val) {
-    if (!in_range(x, y)) return;
     m_root = insert(m_root, x, y, val);
   }
 
@@ -82,20 +77,10 @@ public:
   }
 
   //Nodes spherical_query(const Key& x, const Key& y, const Key& radius) {
-    //if (!in_range(x,y)) return;
 
   //}
 
 private:
-
-  bool in_range(const Key& x, const Key& y) {
-    if (!max_x || !max_y) throw std::logic_error("Dimesions missing!");
-
-    if (x >= max_x) return false;
-    if (y >= max_y) return false;
-
-    return true;
-  }
 
   Node* insert(Node* n, const Key& x, const Key& y, const Value& val) {
     if (!n) return new Node(x, y, val);

@@ -1,8 +1,8 @@
 #include <iostream>
-#include "point_quadtree.h"
+#include "PointQuadtree.hpp"
 
 int main() {
-  qoaed::PointQuadtree<std::string> pqt(50, 50);
+  qoaed::PointQuadtree<std::string> pqt;
 
   pqt.insert(3, 2, "P: 3");
   pqt.insert(6, 7, "P: 2");

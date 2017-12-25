@@ -38,6 +38,9 @@ public:
     Value& operator*() const { return n->val; }
   };
 
+private:
+  Node* m_root;
+
 };
 
 }
