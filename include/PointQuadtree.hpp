@@ -1,13 +1,13 @@
-#ifndef QOAED_POINT_QUADTREE_H
-#define QOAED_POINT_QUADTREE_H
+#ifndef QOAED_POINT_QUADTREE_HPP
+#define QOAED_POINT_QUADTREE_HPP
 
-#include <array>
-#include <list>
 #include <set>
+#include <list>
+#include <array>
 
 namespace qoaed {
 
-template <class Value, class Key = unsigned long>
+template <class Value, class Key = long>
 class PointQuadtree {
 private:
 
