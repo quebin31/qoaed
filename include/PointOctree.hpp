@@ -36,6 +36,7 @@ public:
     const Key& get_y() const { return n->y; }
     const Key& get_z() const { return n->z; }
     Value& operator*() const { return n->val; }
+    operator   bool()  const { return (bool) n; }
   };
 
 private:

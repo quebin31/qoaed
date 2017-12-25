@@ -12,10 +12,11 @@ int main() {
 
   auto result = pqt.ranged_query(qoaed::PointQuadtree<std::string>::Rect(1, 1, 10, 10));
 
-  for (auto& x : result)
-    std::cout << *x << ' ';
-  std::cout << std::endl;
+  std::cout << "Visit BFS on pqt:\n";
+  pqt.visit_bfs([](auto& n){ std::cout << "x: " << n.x << ", y: " << n.y << '\n'; });
 
+  std::cout << "Visit BFS on result:\n";
+  result.visit_bfs([](auto& n){ std::cout << "x: " << n.x << ", y: " << n.y << '\n'; });
 
   return 0;
 }

@@ -3,15 +3,15 @@ project(QOAED CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(TEST_SRC_DIR ${PROJECT_SOURCE_DIR}/test)
-set(TEST_BIN_DIR ${PROJECT_SOURCE_DIR}/bin)
+set(TEST_BIN_DIR ${PROJECT_BINARY_DIR}/bin)
 
-file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 # Search for pkg-config
 find_package(PkgConfig REQUIRED)
 pkg_search_module(X11 REQUIRED x11)
 
-include_directories(inc)
+include_directories(include)
 
 add_executable(point_quadtree ${TEST_SRC_DIR}/PointQuadtreeTest.cpp)
 

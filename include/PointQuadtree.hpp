@@ -33,6 +33,8 @@ public:
   private:
     Node* n;
 
+    friend class PointQuadtree;
+
   public:
     NodeVisitor(Node* n): n(n) {}
 
@@ -75,24 +77,24 @@ public:
     m_root = insert(m_root, x, y, val);
   }
 
-  Nodes ranged_query(const Rect& rect) {
-    Nodes node_set;
-    ranged_query(m_root, rect, node_set);
-    return node_set;
+  PointQuadtree ranged_query(const Rect& rect) {
+    PointQuadtree subtree;
+    ranged_query(m_root, rect, subtree);
+    return subtree;
   }
 
   //Nodes spherical_query(const Key& x, const Key& y, const Key& radius) {
 
   //}
   
-  void visit_dfs(std::function<void (const Node&)>& visitor, NodeVisitor start = 0) {
+  void visit_dfs(const std::function<void (const Node&)>& visitor, NodeVisitor start = 0) {
     if (!m_root) return;
 
     std::stack<Node*> cont;
     if (!start)
-      start->n = m_root;
+      start.n = m_root;
 
-    cont.push(start->n);
+    cont.push(start.n);
     Node* tmp;
     while (!cont.empty()) {
       tmp = cont.top();
@@ -106,15 +108,15 @@ public:
     }
   }
 
-  void visit_bfs(std::function<void (const Node&)>& visitor, NodeVisitor start = 0) {
+  void visit_bfs(const std::function<void (const Node&)>& visitor, NodeVisitor start = 0) {
     if (!m_root) return;
 
     std::queue<Node*> cont;
     if (!start)
-      start->n = m_root;
+      start.n = m_root;
 
 
-    cont.push(start->n);
+    cont.push(start.n);
     Node* tmp;
     while (!cont.empty()) {
       tmp = cont.front();
@@ -148,22 +150,22 @@ private:
     return n;
   }
 
-  void ranged_query(Node* n, const Rect& rect, Nodes& nodes) {
+  void ranged_query(Node* n, const Rect& rect, PointQuadtree& subtree) {
     if (!n) return;
 
-    if (rect.contains(n->x, n->y)) nodes.emplace_back(n);
+    if (rect.contains(n->x, n->y)) subtree.insert(n->x, n->y, n->val);
 
     if (rect.min_x < n->x && rect.min_y < n->y)
-      ranged_query(n->childs[SW], rect, nodes);
+      ranged_query(n->childs[SW], rect, subtree);
 
     if (rect.min_x < n->x && rect.min_y > n->y)
-      ranged_query(n->childs[NW], rect, nodes);
+      ranged_query(n->childs[NW], rect, subtree);
 
     if (rect.max_x > n->x && rect.max_y < n->y)
-      ranged_query(n->childs[NE], rect, nodes);
+      ranged_query(n->childs[NE], rect, subtree);
 
     if (rect.max_x > n->x && rect.max_y > n->y)
-      ranged_query(n->childs[SE], rect, nodes);
+      ranged_query(n->childs[SE], rect, subtree);
   }
 
 };
