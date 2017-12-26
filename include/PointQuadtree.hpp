@@ -16,12 +16,12 @@ class PointQuadtree {
 private:
 
   struct Node;
-  using Childs = std::array<Node*, 4>;
+  using  Childs = std::array<Node*, 4>;
 
   struct Node {
-    Key    x, y;
-    Value  val;
-    Childs childs;
+    Key     x, y;
+    Childs  childs;
+    mutable Value  val;
 
     Node(const Key& x, const Key& y, const Value& val):
       x(x), y(y), val(val) { childs = {0, 0, 0, 0}; }
@@ -32,7 +32,6 @@ public:
   class NodeVisitor {
   private:
     Node* n;
-
     friend class PointQuadtree;
 
   public:
@@ -64,17 +63,16 @@ public:
 private:
   Node* m_root;
 
-  static const int NW = 0;
-  static const int NE = 1;
-  static const int SE = 2;
-  static const int SW = 3;
+  enum Quadrants { NW, NE, SE, SW };
 
 public:
 
   PointQuadtree() : m_root(0) {}
 
   void insert(const Key& x, const Key& y, const Value& val) {
-    m_root = insert(m_root, x, y, val);
+    Node** tmp;
+    if (find(x,y,tmp)) return;
+    (*tmp) = new Node(x,y,val);
   }
 
   PointQuadtree ranged_query(const Rect& rect) {
@@ -87,7 +85,7 @@ public:
 
   //}
   
-  void visit_dfs(const std::function<void (const Node&)>& visitor, NodeVisitor start = 0) {
+  void visit_dfs(const std::function<void (const Node&)>& visitor, NodeVisitor start = NodeVisitor(0)) {
     if (!m_root) return;
 
     std::stack<Node*> cont;
@@ -108,7 +106,7 @@ public:
     }
   }
 
-  void visit_bfs(const std::function<void (const Node&)>& visitor, NodeVisitor start = 0) {
+  void visit_bfs(const std::function<void (const Node&)>& visitor, NodeVisitor start = NodeVisitor(0)) {
     if (!m_root) return;
 
     std::queue<Node*> cont;
@@ -132,22 +130,25 @@ public:
 
 private:
 
-  Node* insert(Node* n, const Key& x, const Key& y, const Value& val) {
-    if (!n) return new Node(x, y, val);
+  bool find(const Key& x, const Key& y, Node**& node) {
+    node = &m_root;
+    while (*node) {
+      if ((*node)->x == x && (*node)->y == y) return true;
+      node = &((*node)->childs[what_quadrant(x,y,*node)]);
+    }
+    return false;
+  }
 
-    else if (x < n->x && y < n->y)
-      n->childs[SW] = insert(n->childs[SW], x, y, val);
-
-    else if (x < n->x && y > n->y)
-      n->childs[NW] = insert(n->childs[NW], x, y, val);
-
-    else if (x > n->x && y < n->y)
-      n->childs[SE] = insert(n->childs[SE], x, y, val);
-
-    else if (x > n->x && y > n->y)
-      n->childs[NE] = insert(n->childs[NE], x, y, val);
-
-    return n;
+  // Tell me where this coord locates relative to Node orig
+  int what_quadrant(const Key& x, const Key& y, Node* orig) {
+    if (x < orig->x && y < orig->y)
+      return SW;
+    if (x < orig->x && y > orig->y)
+      return NW;
+    if (x > orig->x && y < orig->y)
+      return SE;
+    if (x > orig->x && y > orig->y)
+      return NE;
   }
 
   void ranged_query(Node* n, const Rect& rect, PointQuadtree& subtree) {
