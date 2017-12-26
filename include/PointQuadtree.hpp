@@ -16,12 +16,12 @@ class PointQuadtree {
 private:
 
   struct Node;
-  using Childs = std::array<Node*, 4>;
+  using  Childs = std::array<Node*, 4>;
 
   struct Node {
-    Key    x, y;
-    Value  val;
-    Childs childs;
+    Key     x, y;
+    Childs  childs;
+    mutable Value  val;
 
     Node(const Key& x, const Key& y, const Value& val):
       x(x), y(y), val(val) { childs = {0, 0, 0, 0}; }

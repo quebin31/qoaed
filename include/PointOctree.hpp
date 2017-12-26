@@ -18,8 +18,8 @@ private:
   using  Childs = std::array<Node*, 8>;
 
   struct Node {
-    Key    x, y, z;
-    Childs childs;
+    Key     x, y, z;
+    Childs  childs;
     mutable Value val;
 
     Node(const Key& x, const Key& y, const Key& z, const Value& val):
