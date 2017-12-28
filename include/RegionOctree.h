@@ -123,19 +123,28 @@ private:
     return false;
   }
 
-  int what_quadrant(const Key& x, const Key& y, const Key& z, Node* n) {
+  int what_octant(const Key& x, const Key& y, const Key& z, Node* n) {
       Key middle_x = (n->min_x + n->max_x)/Key(2);
       Key middle_y = (n->min_y + n->max_y)/Key(2);
       Key middle_z = (n->min_z + n->max_z)/Key(2);
 
-      if(x>=middle_x && x<=n->max_x && y>=middle_y && y<=n->max_y && z>=n->min_z && z<=middle_z) return 0;
-      if(x>=n->min_x && x<=middle_x && y>=middle_y && y<=n->max_y && z>=n->min_z && z<=middle_z) return 1;
-      if(x>=n->min_x && y>=middle_y && z>=n->min_z && x<=middle_x && y<=n->max_y && z<=middle_z) return 2;
-      if(x>=middle_x && y>=n->min_y && z>=n->min_z && x<=n->max_x && y<=middle_y && z<=middle_z) return 3;
-      if(x>=middle_x && y>=n->min_y && z>=middle_z && x<=n->max_x && y<=middle_y && z<=n->max_z) return 4;
-      if(x>=middle_x && y>=middle_y && z>=middle_z && x<=n->max_x && y<=n->max_y && z<=n->max_z) return 5;
-      if(x>=n->min_x && y>=middle_y && z>=middle_z && x<=middle_x && y<=n->max_y && z<=n->max_z) return 6;
-      if(x>=n->min_x && y>=n->min_y && z>=middle_z && x<=middle_x && y<=middle_y && z<=n->max_z) return 7;
+      // TODO: Esta bien que todas las comparaciones sean menor o igual ; mayor o igual?
+      if(x >= middle_x && x <= n->max_x && y >= middle_y && y <= n->max_y && z >= n->min_z && z <= middle_z) 
+        return 0;
+      if(x >= n->min_x && x <= middle_x && y >= middle_y && y <= n->max_y && z >= n->min_z && z <= middle_z) 
+        return 1;
+      if(x >= n->min_x && y >= middle_y && z >= n->min_z && x <= middle_x && y <= n->max_y && z <= middle_z) 
+        return 2;
+      if(x >= middle_x && y >= n->min_y && z >= n->min_z && x <= n->max_x && y <= middle_y && z <= middle_z) 
+        return 3;
+      if(x >= middle_x && y >= n->min_y && z >= middle_z && x <= n->max_x && y <= middle_y && z <= n->max_z) 
+        return 4;
+      if(x >= middle_x && y >= middle_y && z >= middle_z && x <= n->max_x && y <= n->max_y && z <= n->max_z) 
+        return 5;
+      if(x >= n->min_x && y >= middle_y && z >= middle_z && x <= middle_x && y <= n->max_y && z <= n->max_z) 
+        return 6;
+      if(x >= n->min_x && y >= n->min_y && z >= middle_z && x <= middle_x && y <= middle_y && z <= n->max_z) 
+        return 7;
   }
 
   void subdivide(Node* n) {
