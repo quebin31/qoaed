@@ -7,7 +7,7 @@ int main() {
   po.insert(3,-2,5,"mundo");
   po.insert(-1,-2,-5,"jaja");
 
-  po.visit_bfs([](auto& n){ std::cout << n.val << std::endl; });
+  po.visit_bfs([](auto& n){ std::cout << n.get_x() << ',' << n.get_y() << *n << std::endl; });
 
   return 0;
 }
