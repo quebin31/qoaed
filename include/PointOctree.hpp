@@ -218,25 +218,39 @@ private:
       subtree.insert(n->x, n->y, n->z, n->val);
       if (visitor)
         visitor(NodeVisitor(n));
-      for (int ii = 0; ii != 8; ++ii)
-        ranged_query(n->childs[ii], cube, subtree, visitor);
-      return;
     }
 
+    if (n->x >= cube.min_x) {
+      if (n->y >= cube.min_y) {
+        if (n->z >= cube.min_z)
+          ranged_query(n->childs[6], cube, subtree, visitor);
+        if (n->z <= cube.max_z)
+          ranged_query(n->childs[2], cube, subtree, visitor);
+      }
 
-    if (n->x <= cube.min_x) {
-      if (n->y <= cube.min_y) {
-        if (n->z <= cube.min_z) 
-          ranged_query(n->childs[0], cube, subtree, visitor);
-        if (n->z >= cube.max_z)
+      if (n->y <= cube.max_y) {
+        if (n->z >= cube.min_z)
+          ranged_query(n->childs[5], cube, subtree, visitor);
+        if (n->z <= cube.max_z)
+          ranged_query(n->childs[1], cube, subtree, visitor);
+      }
+    }
+
+    if (n->x <= cube.max_x) {
+      if (n->y >= cube.min_y) {
+        if (n->z >= cube.min_z)
+          ranged_query(n->childs[7], cube, subtree, visitor);
+        if (n->z <= cube.max_z)
+          ranged_query(n->childs[3], cube, subtree, visitor);
+      }
+
+      if (n->y <= cube.max_y) {
+        if (n->z >= cube.min_z)
           ranged_query(n->childs[4], cube, subtree, visitor);
-      }
-
-      if (n->y >= cube.max_y) {
-
+        if (n->z <= cube.max_z)
+          ranged_query(n->childs[0], cube, subtree, visitor);
       }
     }
-
   }
 };
 
