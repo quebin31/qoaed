@@ -71,6 +71,25 @@ public:
     operator    bool() const { return (bool) n; }
   };
 
+  struct Cube {
+  private:
+    Key min_x, min_y, min_z;
+    Key max_x, max_y, max_z;
+
+    Cube(const Key& min_x, const Key& min_y, const Key& min_z,
+         const Key& max_x, const Key& max_y, const Key& max_z) :
+      min_x(min_x), min_y(min_y), min_z(min_z),
+      max_x(max_x), max_y(max_y), max_z(max_z)  {}
+
+    bool contains(const Key& x, const Key& y, const Key& z) {
+      bool cx, cy, cz;
+      cx = (x <= max_x && x >= min_x);
+      cy = (y <= max_y && y >= min_y);
+      cz = (z <= max_z && x >= min_z);
+      return cx && cy && cz;
+    }
+  };
+
 private:
   Node* m_root;
 

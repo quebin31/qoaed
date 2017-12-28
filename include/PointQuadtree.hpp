@@ -82,7 +82,6 @@ public:
 
     bool contains(const Key& x, const Key& y) const {
       bool cx, cy;
-      // TODO: cx and cy comparisions
       return cx && cy;
     }
   };
