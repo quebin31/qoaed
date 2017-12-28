@@ -156,17 +156,6 @@ private:
 
     if (rect.contains(n->x, n->y)) subtree.insert(n->x, n->y, n->val);
 
-    if (rect.min_x < n->x && rect.min_y < n->y)
-      ranged_query(n->childs[SW], rect, subtree);
-
-    if (rect.min_x < n->x && rect.min_y > n->y)
-      ranged_query(n->childs[NW], rect, subtree);
-
-    if (rect.max_x > n->x && rect.max_y < n->y)
-      ranged_query(n->childs[NE], rect, subtree);
-
-    if (rect.max_x > n->x && rect.max_y > n->y)
-      ranged_query(n->childs[SE], rect, subtree);
   }
 
 };
