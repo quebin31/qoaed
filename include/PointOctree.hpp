@@ -87,7 +87,7 @@ public:
       bool cx, cy, cz;
       cx = (x <= max_x && x >= min_x);
       cy = (y <= max_y && y >= min_y);
-      cz = (z <= max_z && x >= min_z);
+      cz = (z <= max_z && z >= min_z);
       return cx && cy && cz;
     }
   };
