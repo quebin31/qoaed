@@ -8,6 +8,34 @@
 #include <queue>
 #include <functional>
 
+// Octants are identified in this way
+// When z is greater_eq than o.z
+//
+//      y
+//
+//      |
+//   1  |  0
+//      |
+//------o------ x
+//      |
+//   2  |  3
+//      |
+//
+// When z is less than o.z
+//
+//      y
+//
+//      |
+//   5  |  4
+//      |
+//------o------ x
+//      |
+//   6  |  7
+//      |
+//
+// See what_octant for more information
+
+
 namespace qoaed {
 
 template <class Value, class Key = long>
@@ -108,28 +136,38 @@ private:
       if ((*node)->x == x && (*node)->y == y && (*node)->z == z) return true;
       node = &((*node)->childs[what_octant(x,y,z,*node)]);
     }
-
     return false;
   }
 
   // Tell me where this coord locates relative to Node orig
   int what_octant(const Key& x, const Key& y, const Key& z, Node* orig) {
-    if (x > orig->x && y > orig->y && z > orig->z)
-      return 0;
-    if (x < orig->x && y > orig->y && z > orig->z)
-      return 1;
-    if (x < orig->x && y < orig->y && z > orig->z)
-      return 2;
-    if (x > orig->x && y < orig->y && z > orig->z)
-      return 3;
-    if (x > orig->x && y > orig->y && z < orig->z)
-      return 4;
-    if (x < orig->x && y > orig->y && z < orig->z)
-      return 5;
-    if (x < orig->x && y < orig->y && z < orig->z)
-      return 6;
-    if (x > orig->x && y < orig->y && z < orig->z)
-      return 7;
+    if (x > orig->x && y >= orig->y) {
+      if (z >= orig->z)
+        return 0;
+      else 
+        return 4;
+    }
+
+    if (x <= orig->x && y > orig->y) {
+      if (z >= orig->z)
+        return 1;
+      else 
+        return 5;
+    }
+
+    if (x < orig->x && y <= orig->y) {
+      if (z >= orig->z)
+        return 2;
+      else 
+        return 6;
+    }
+
+    if (x >= orig->x && y < orig->y) {
+      if (z >= orig->z)
+        return 3;
+      else 
+        return 7;
+    }
   }
 
 };

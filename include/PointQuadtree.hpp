@@ -6,8 +6,21 @@
 #include <array>
 #include <stack>
 #include <queue>
+#include <iostream>
 #include <functional>
 
+// Quadrants are identified in this way
+//      y
+//
+//      |
+//   1  |  0
+//      |
+//------o------ x
+//      |
+//   2  |  3
+//      |
+//
+// See what_quadrant for more information
 
 namespace qoaed {
 
@@ -30,9 +43,10 @@ private:
 public:
 
   class NodeVisitor {
+  friend class PointQuadtree;
+
   private:
     Node* n;
-    friend class PointQuadtree;
 
   public:
     NodeVisitor(Node* n): n(n) {}
@@ -43,13 +57,11 @@ public:
     operator   bool()  const { return (bool) n; }
   };
 
-  using Nodes = std::list<NodeVisitor>;
-
   struct Rect {
     Key min_x, min_y;
     Key max_x, max_y;
 
-    Rect(const Key& min_x, const Key& min_y, const Key& max_x, const Key& max_y):
+    Rect(const Key& min_x, const Key& min_y, const Key& max_x, const Key& max_y) :
       min_x(min_x), min_y(min_y), max_x(max_x), max_y(max_y) {}
 
     bool contains(const Key& x, const Key& y) const {
@@ -60,10 +72,23 @@ public:
     }
   };
 
+  struct Circ {
+    Key org_x;
+    Key org_y;
+    long radius;
+
+    Circ(const Key& ox, const Key& oy, const long& r) :
+      org_x(ox), org_y(oy), radius(r) {}
+
+    bool contains(const Key& x, const Key& y) const {
+      bool cx, cy;
+      // TODO: cx and cy comparisions
+      return cx && cy;
+    }
+  };
+
 private:
   Node* m_root;
-
-  enum Quadrants { NW, NE, SE, SW };
 
 public:
 
@@ -81,7 +106,7 @@ public:
     return subtree;
   }
 
-  //Nodes spherical_query(const Key& x, const Key& y, const Key& radius) {
+  //PointQuadtree radio_query(const Circ& circ) {
 
   //}
   
@@ -141,23 +166,40 @@ private:
 
   // Tell me where this coord locates relative to Node orig
   int what_quadrant(const Key& x, const Key& y, Node* orig) {
-    if (x < orig->x && y < orig->y)
-      return SW;
-    if (x < orig->x && y > orig->y)
-      return NW;
-    if (x > orig->x && y < orig->y)
-      return SE;
-    if (x > orig->x && y > orig->y)
-      return NE;
+    if (x > orig->x && y >= orig->y)
+      return 0;
+    if (x <= orig->x && y > orig->y)
+      return 1;
+    if (x < orig->x && y <= orig->y)
+      return 2;
+    if (x >= orig->x && y < orig->y)
+      return 3;
   }
 
   void ranged_query(Node* n, const Rect& rect, PointQuadtree& subtree) {
     if (!n) return;
 
-    if (rect.contains(n->x, n->y)) subtree.insert(n->x, n->y, n->val);
+    if (rect.contains(n->x, n->y)) {
+      subtree.insert(n->x, n->y, n->val);
+      for (int ii = 0; ii != 4; ++ii)
+        ranged_query(n->childs[ii], rect, subtree);
+      return;
+    }
 
+    if (n->x <= rect.min_x) {
+      if (n->y <= rect.min_y)
+        ranged_query(n->childs[0], rect, subtree);
+      if (n->y >= rect.max_y)
+        ranged_query(n->childs[3], rect, subtree);
+    }
+
+    if (n->x >= rect.max_x) {
+      if (n->y <= rect.min_y)
+        ranged_query(n->childs[1], rect, subtree);
+      if (n->y >= rect.max_y)
+        ranged_query(n->childs[2], rect, subtree);
+    }
   }
-
 };
 
 }
