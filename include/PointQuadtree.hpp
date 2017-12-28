@@ -166,8 +166,30 @@ private:
   void ranged_query(Node* n, const Rect& rect, PointQuadtree& subtree) {
     if (!n) return;
 
-    if (rect.contains(n->x, n->y)) 
+    if (rect.contains(n->x, n->y)) {
       subtree.insert(n->x, n->y, n->val);
+      for (int ii = 0; ii != 4; ++ii)
+        ranged_query(n->childs[ii], rect, subtree);
+      return;
+    }
+
+    if (n->x <= rect.min_x) {
+      if (n->y <= rect.min_y)
+        ranged_query(n->childs[0], rect, subtree);
+      if (n->y >= rect.max_y)
+        ranged_query(n->childs[3], rect, subtree);
+    }
+
+    if (n->x >= rect.max_x) {
+      if (n->y <= rect.min_y)
+        ranged_query(n->childs[1], rect, subtree);
+      if (n->y >= rect.max_y)
+        ranged_query(n->childs[2], rect, subtree);
+    }
+  }
+
+  bool is_between(const Key& c, const Key& y_beg, const Key& y_end) {
+    return (y_beg <= c && c <= y_end);
   }
 
 };
