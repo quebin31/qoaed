@@ -6,8 +6,18 @@
 #include <array>
 #include <stack>
 #include <queue>
+#include <iostream>
 #include <functional>
 
+// Quadrants are identified in this way
+//                
+//      |
+//   1  |  0
+//      |
+//------o------
+//      |
+//   2  |  3
+//      |
 
 namespace qoaed {
 
@@ -30,9 +40,10 @@ private:
 public:
 
   class NodeVisitor {
+  friend class PointQuadtree;
+
   private:
     Node* n;
-    friend class PointQuadtree;
 
   public:
     NodeVisitor(Node* n): n(n) {}
@@ -62,8 +73,6 @@ public:
 
 private:
   Node* m_root;
-
-  enum Quadrants { NW, NE, SE, SW };
 
 public:
 
@@ -141,21 +150,21 @@ private:
 
   // Tell me where this coord locates relative to Node orig
   int what_quadrant(const Key& x, const Key& y, Node* orig) {
-    if (x < orig->x && y < orig->y)
-      return SW;
-    if (x < orig->x && y > orig->y)
-      return NW;
-    if (x > orig->x && y < orig->y)
-      return SE;
-    if (x > orig->x && y > orig->y)
-      return NE;
+    if (x >  orig->x && y >= orig->y)
+      return 0;
+    if (x <= orig->x && y >  orig->y)
+      return 1;
+    if (x <  orig->x && y <= orig->y)
+      return 2;
+    if (x >= orig->x && y <  orig->y)
+      return 3;
   }
 
   void ranged_query(Node* n, const Rect& rect, PointQuadtree& subtree) {
     if (!n) return;
 
-    if (rect.contains(n->x, n->y)) subtree.insert(n->x, n->y, n->val);
-
+    if (rect.contains(n->x, n->y)) 
+      subtree.insert(n->x, n->y, n->val);
   }
 
 };
