@@ -28,10 +28,10 @@ template <class Value, class Key = long>
 class PointQuadtree {
 private:
 
-  struct Node;
-  using  Childs = std::array<Node*, 4>;
+  class Node;
+  using Childs = std::array<Node*, 4>;
 
-  struct Node {
+  class Node {
     Key     x, y;
     Childs  childs;
     mutable Value  val;
@@ -57,10 +57,12 @@ public:
     operator   bool()  const { return (bool) n; }
   };
 
-  struct Rect {
+  class Rect {
+  private:
     Key min_x, min_y;
     Key max_x, max_y;
 
+  public:
     Rect(const Key& min_x, const Key& min_y, const Key& max_x, const Key& max_y) :
       min_x(min_x), min_y(min_y), max_x(max_x), max_y(max_y) {}
 
@@ -72,11 +74,13 @@ public:
     }
   };
 
-  struct Circ {
+  class Circ {
+  private:
     Key org_x;
     Key org_y;
     long radius;
 
+  public:
     Circ(const Key& ox, const Key& oy, const long& r) :
       org_x(ox), org_y(oy), radius(r) {}
 

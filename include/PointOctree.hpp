@@ -42,10 +42,11 @@ template <class Value, class Key = long>
 class PointOctree {
 private: 
 
-  struct Node;
-  using  Childs = std::array<Node*, 8>;
+  class Node;
+  using Childs = std::array<Node*, 8>;
 
-  struct Node {
+  class Node {
+  public:
     Key     x, y, z;
     Childs  childs;
     mutable Value val;
@@ -71,11 +72,12 @@ public:
     operator    bool() const { return (bool) n; }
   };
 
-  struct Cube {
+  class Cube {
   private:
     Key min_x, min_y, min_z;
     Key max_x, max_y, max_z;
 
+  public:
     Cube(const Key& min_x, const Key& min_y, const Key& min_z,
          const Key& max_x, const Key& max_y, const Key& max_z) :
       min_x(min_x), min_y(min_y), min_z(min_z),
