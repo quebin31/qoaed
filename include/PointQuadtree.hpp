@@ -10,14 +10,17 @@
 #include <functional>
 
 // Quadrants are identified in this way
-//                
+//      y
+//
 //      |
 //   1  |  0
 //      |
-//------o------
+//------o------ x
 //      |
 //   2  |  3
 //      |
+//
+// See what_quadrant for more information
 
 namespace qoaed {
 
@@ -150,13 +153,13 @@ private:
 
   // Tell me where this coord locates relative to Node orig
   int what_quadrant(const Key& x, const Key& y, Node* orig) {
-    if (x >  orig->x && y >= orig->y)
+    if (x > orig->x && y >= orig->y)
       return 0;
-    if (x <= orig->x && y >  orig->y)
+    if (x <= orig->x && y > orig->y)
       return 1;
-    if (x <  orig->x && y <= orig->y)
+    if (x < orig->x && y <= orig->y)
       return 2;
-    if (x >= orig->x && y <  orig->y)
+    if (x >= orig->x && y < orig->y)
       return 3;
   }
 
