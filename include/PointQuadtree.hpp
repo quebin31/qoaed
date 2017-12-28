@@ -57,19 +57,32 @@ public:
     operator   bool()  const { return (bool) n; }
   };
 
-  using Nodes = std::list<NodeVisitor>;
-
   struct Rect {
     Key min_x, min_y;
     Key max_x, max_y;
 
-    Rect(const Key& min_x, const Key& min_y, const Key& max_x, const Key& max_y):
+    Rect(const Key& min_x, const Key& min_y, const Key& max_x, const Key& max_y) :
       min_x(min_x), min_y(min_y), max_x(max_x), max_y(max_y) {}
 
     bool contains(const Key& x, const Key& y) const {
       bool cx, cy;
       cx = (x <= max_x && x >= min_x);
       cy = (y <= max_y && x >= min_y);
+      return cx && cy;
+    }
+  };
+
+  struct Circ {
+    Key org_x;
+    Key org_y;
+    long radius;
+
+    Circ(const Key& ox, const Key& oy, const long& r) :
+      org_x(ox), org_y(oy), radius(r) {}
+
+    bool contains(const Key& x, const Key& y) const {
+      bool cx, cy;
+      // TODO: cx and cy comparisions
       return cx && cy;
     }
   };
@@ -93,7 +106,7 @@ public:
     return subtree;
   }
 
-  //Nodes spherical_query(const Key& x, const Key& y, const Key& radius) {
+  //PointQuadtree radio_query(const Circ& circ) {
 
   //}
   
@@ -187,11 +200,6 @@ private:
         ranged_query(n->childs[2], rect, subtree);
     }
   }
-
-  bool is_between(const Key& c, const Key& y_beg, const Key& y_end) {
-    return (y_beg <= c && c <= y_end);
-  }
-
 };
 
 }
