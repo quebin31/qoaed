@@ -86,7 +86,7 @@ public:
       min_x(min_x), min_y(min_y), min_z(min_z),
       max_x(max_x), max_y(max_y), max_z(max_z)  {}
 
-    bool contains(const Key& x, const Key& y, const Key& z) {
+    bool contains(const Key& x, const Key& y, const Key& z) const {
       bool cx, cy, cz;
       cx = (x <= max_x && x >= min_x);
       cy = (y <= max_y && y >= min_y);
