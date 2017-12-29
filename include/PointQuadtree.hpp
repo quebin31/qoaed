@@ -32,6 +32,7 @@ private:
   using Childs = std::array<Node*, 4>;
 
   class Node {
+  public:
     Key     x, y;
     Childs  childs;
     mutable Value  val;
@@ -39,6 +40,7 @@ private:
     Node(const Key& x, const Key& y, const Value& val):
       x(x), y(y), val(val) { childs = {0, 0, 0, 0}; }
   };
+
 
 public:
 
@@ -58,6 +60,8 @@ public:
   };
 
   class Rect {
+  friend class PointQuadtree;
+
   private:
     Key min_x, min_y;
     Key max_x, max_y;
@@ -75,6 +79,8 @@ public:
   };
 
   class Circ {
+  friend class PointQuadtree;
+
   private:
     Key org_x;
     Key org_y;
@@ -90,6 +96,8 @@ public:
     }
   };
 
+  using VisitorFunction = typename std::function<void (const NodeVisitor&)>;
+
 private:
   Node* m_root;
 
@@ -103,9 +111,17 @@ public:
     (*tmp) = new Node(x,y,val);
   }
 
-  PointQuadtree ranged_query(const Rect& rect) {
+  NodeVisitor find(const Key& x, const Key& y) {
+    Node** tmp;
+    if (!find(x,y,tmp))
+      throw std::runtime_error("Point (" + std::to_string(x) + ", " + std::to_string(y) + ") not found");
+
+    return NodeVisitor(*tmp);
+  }
+
+  PointQuadtree ranged_query(const Rect& rect, const VisitorFunction& visitor = [](auto& n){}) {
     PointQuadtree subtree;
-    ranged_query(m_root, rect, subtree);
+    ranged_query(m_root, rect, subtree, visitor);
     return subtree;
   }
 
@@ -113,7 +129,7 @@ public:
 
   //}
   
-  void visit_dfs(const std::function<void (const Node&)>& visitor, NodeVisitor start = NodeVisitor(0)) {
+  void visit_dfs(const VisitorFunction& visitor, NodeVisitor start = NodeVisitor(0)) {
     if (!m_root) return;
 
     std::stack<Node*> cont;
@@ -126,7 +142,8 @@ public:
       tmp = cont.top();
             cont.pop();
 
-      visitor(*tmp);
+      if (visitor)
+        visitor(start.n = tmp);
 
       for (int ii = 0; ii < 4; ++ii) 
         if (tmp->childs[ii])
@@ -134,7 +151,7 @@ public:
     }
   }
 
-  void visit_bfs(const std::function<void (const Node&)>& visitor, NodeVisitor start = NodeVisitor(0)) {
+  void visit_bfs(const VisitorFunction& visitor, NodeVisitor start = NodeVisitor(0)) {
     if (!m_root) return;
 
     std::queue<Node*> cont;
@@ -148,7 +165,7 @@ public:
       tmp = cont.front();
             cont.pop();
 
-      visitor(*tmp);
+      visitor(start.n = tmp);
 
       for (int ii = 0; ii < 4; ++ii)
         if (tmp->childs[ii])
@@ -179,28 +196,27 @@ private:
       return 3;
   }
 
-  void ranged_query(Node* n, const Rect& rect, PointQuadtree& subtree) {
+  void ranged_query(Node* n, const Rect& rect, PointQuadtree& subtree, const VisitorFunction& visitor) {
     if (!n) return;
 
     if (rect.contains(n->x, n->y)) {
       subtree.insert(n->x, n->y, n->val);
-      for (int ii = 0; ii != 4; ++ii)
-        ranged_query(n->childs[ii], rect, subtree);
-      return;
+      if (visitor)
+        visitor(NodeVisitor(n));
     }
 
-    if (n->x <= rect.min_x) {
-      if (n->y <= rect.min_y)
-        ranged_query(n->childs[0], rect, subtree);
-      if (n->y >= rect.max_y)
-        ranged_query(n->childs[3], rect, subtree);
+    if (n->x <= rect.max_x) {
+      if (n->y >= rect.min_y)
+        ranged_query(n->childs[3], rect, subtree, visitor);
+      if (n->y <= rect.max_y)
+        ranged_query(n->childs[0], rect, subtree, visitor);
     }
 
-    if (n->x >= rect.max_x) {
-      if (n->y <= rect.min_y)
-        ranged_query(n->childs[1], rect, subtree);
-      if (n->y >= rect.max_y)
-        ranged_query(n->childs[2], rect, subtree);
+    if (n->x >= rect.min_x) {
+      if (n->y >= rect.min_y)
+        ranged_query(n->childs[2], rect, subtree, visitor);
+      if (n->y <= rect.max_y)
+        ranged_query(n->childs[1], rect, subtree, visitor);
     }
   }
 };
