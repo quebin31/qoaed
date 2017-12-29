@@ -8,8 +8,8 @@ set(TEST_BIN_DIR ${PROJECT_BINARY_DIR}/bin)
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 # Search for pkg-config
-find_package(PkgConfig REQUIRED)
-pkg_search_module(X11 REQUIRED x11)
+#find_package(PkgConfig REQUIRED)
+#pkg_search_module(X11 REQUIRED x11)
 
 include_directories(include)
 
