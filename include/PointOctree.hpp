@@ -42,10 +42,11 @@ template <class Value, class Key = long>
 class PointOctree {
 private: 
 
-  struct Node;
-  using  Childs = std::array<Node*, 8>;
+  class Node;
+  using Childs = std::array<Node*, 8>;
 
-  struct Node {
+  class Node {
+  public:
     Key     x, y, z;
     Childs  childs;
     mutable Value val;
@@ -57,9 +58,10 @@ private:
 public:
   
   class NodeVisitor {
+  friend class PointOctree;
+
   private:
     Node* n;
-    friend class PointOctree;
 
   public:
     NodeVisitor(Node* n): n(n) {}
@@ -70,6 +72,30 @@ public:
     Value& operator*() const { return n->val; }
     operator    bool() const { return (bool) n; }
   };
+
+  class Cube {
+  friend class PointOctree;
+
+  private:
+    Key min_x, min_y, min_z;
+    Key max_x, max_y, max_z;
+
+  public:
+    Cube(const Key& min_x, const Key& min_y, const Key& min_z,
+         const Key& max_x, const Key& max_y, const Key& max_z) :
+      min_x(min_x), min_y(min_y), min_z(min_z),
+      max_x(max_x), max_y(max_y), max_z(max_z)  {}
+
+    bool contains(const Key& x, const Key& y, const Key& z) const {
+      bool cx, cy, cz;
+      cx = (x <= max_x && x >= min_x);
+      cy = (y <= max_y && y >= min_y);
+      cz = (z <= max_z && z >= min_z);
+      return cx && cy && cz;
+    }
+  };
+
+  using VisitorFunction = typename std::function<void (const NodeVisitor&)>;
 
 private:
   Node* m_root;
@@ -85,7 +111,21 @@ public:
     (*tmp) = new Node(x,y,z,val);
   }
 
-  void visit_dfs(const std::function<void (const Node&)>& visitor, NodeVisitor start = NodeVisitor(0)) {
+  NodeVisitor find(const Key& x, const Key& y, const Key& z) {
+    Node** tmp;
+    if (!find(x,y,z,tmp))
+      throw std::runtime_error("Point (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ") not found");
+
+    return NodeVisitor(*tmp);
+  }
+
+  PointOctree ranged_query(const Cube& cube, const VisitorFunction& visitor = [](auto& n){}) {
+    PointOctree subtree;
+    ranged_query(m_root, cube, subtree, visitor);
+    return subtree;
+  }
+
+  void visit_dfs(const std::function<void (const NodeVisitor&)>& visitor, NodeVisitor start = NodeVisitor(0)) {
     if (!m_root) return;
 
     std::stack<Node*> cont;
@@ -98,7 +138,8 @@ public:
       tmp = cont.top();
             cont.pop();
 
-      visitor(*tmp);
+      if (visitor)
+        visitor(start.n = tmp);
 
       for (int ii = 0; ii < 8; ++ii)
         if (tmp->childs[ii])
@@ -106,7 +147,7 @@ public:
     }
   }
 
-  void visit_bfs(const std::function<void (const Node&)>& visitor, NodeVisitor start = NodeVisitor(0)) {
+  void visit_bfs(const std::function<void (const NodeVisitor&)>& visitor, NodeVisitor start = NodeVisitor(0)) {
     if (!m_root) return;
 
     std::queue<Node*> cont;
@@ -119,7 +160,7 @@ public:
       tmp = cont.front();
             cont.pop();
 
-      visitor(*tmp);
+      visitor(start.n = tmp);
 
       for (int ii = 0; ii < 8; ++ii)
         if (tmp->childs[ii])
@@ -170,6 +211,47 @@ private:
     }
   }
 
+  void ranged_query(Node* n, const Cube& cube, PointOctree& subtree, const VisitorFunction& visitor) {
+    if (!n) return;
+
+    if (cube.contains(n->x, n->y, n->z)) { 
+      subtree.insert(n->x, n->y, n->z, n->val);
+      if (visitor)
+        visitor(NodeVisitor(n));
+    }
+
+    if (n->x >= cube.min_x) {
+      if (n->y >= cube.min_y) {
+        if (n->z >= cube.min_z)
+          ranged_query(n->childs[6], cube, subtree, visitor);
+        if (n->z <= cube.max_z)
+          ranged_query(n->childs[2], cube, subtree, visitor);
+      }
+
+      if (n->y <= cube.max_y) {
+        if (n->z >= cube.min_z)
+          ranged_query(n->childs[5], cube, subtree, visitor);
+        if (n->z <= cube.max_z)
+          ranged_query(n->childs[1], cube, subtree, visitor);
+      }
+    }
+
+    if (n->x <= cube.max_x) {
+      if (n->y >= cube.min_y) {
+        if (n->z >= cube.min_z)
+          ranged_query(n->childs[7], cube, subtree, visitor);
+        if (n->z <= cube.max_z)
+          ranged_query(n->childs[3], cube, subtree, visitor);
+      }
+
+      if (n->y <= cube.max_y) {
+        if (n->z >= cube.min_z)
+          ranged_query(n->childs[4], cube, subtree, visitor);
+        if (n->z <= cube.max_z)
+          ranged_query(n->childs[0], cube, subtree, visitor);
+      }
+    }
+  }
 };
 
 }
