@@ -26,7 +26,8 @@ add_executable(point_octree    ${TEST_SRC_DIR}/PointOctreeTest.cpp)
 add_executable(region_quadtree ${TEST_SRC_DIR}/RegionQuadtreeTest.cpp)
 add_executable(region_octree   ${TEST_SRC_DIR}/RegionOctreeTest.cpp)
 
-#test targets using CImg should link with x11 libs
+target_link_libraries(point_octree ${PCL_LIBRARIES})
+
 set_target_properties(
   point_quadtree
   point_octree
@@ -36,8 +37,5 @@ set_target_properties(
 	PROPERTIES
 
 	RUNTIME_OUTPUT_DIRECTORY "${TEST_BIN_DIR}"
-  LINK_LIBRARIES           "${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES}"
+  #LINK_LIBRARIES           "${PCL_LIBRARIES}"
 )
-
-#test targets using CImg should link with pthread library
-#target_link_libraries(test_target pthread)
