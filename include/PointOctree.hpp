@@ -139,10 +139,7 @@ public:
 
   NodeVisitor find(const Point& p) {
     Node** tmp = 0;
-    if (!find(p, tmp))
-      throw std::runtime_error("Point (" + std::to_string(p.x) + ", " + std::to_string(p.y) + ", " + 
-          std::to_string(p.z) + ") not found");
-
+    find(p, tmp);
     return NodeVisitor(*tmp);
   }
 

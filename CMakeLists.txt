@@ -27,9 +27,11 @@ add_executable(region_quadtree ${TEST_SRC_DIR}/RegionQuadtreeTest.cpp)
 add_executable(region_octree   ${TEST_SRC_DIR}/RegionOctreeTest.cpp)
 add_executable(pcl_lib         ${TEST_SRC_DIR}/PCLTest.cpp)
 add_executable(tools           ${TEST_SRC_DIR}/ToolsTest.cpp)
+add_executable(octree_demo     ${TEST_SRC_DIR}/OctreeDemo.cpp)
 
 #target_link_libraries(point_octree ${PCL_LIBRARIES})
 target_link_libraries(pcl_lib ${PCL_LIBRARIES})
+target_link_libraries(octree_demo ${PCL_LIBRARIES})
 
 set_target_properties(
   point_quadtree
@@ -38,6 +40,7 @@ set_target_properties(
   region_octree
   pcl_lib
   tools
+  octree_demo
 
 	PROPERTIES
 
