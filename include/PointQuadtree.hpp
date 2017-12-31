@@ -9,6 +9,8 @@
 #include <iostream>
 #include <functional>
 
+#include "Point.hpp"
+
 // Quadrants are identified in this way
 //      y
 //
@@ -24,8 +26,14 @@
 
 namespace qoaed {
 
-template <class Value, class Key = long>
+template <class Value, class CoordType = long>
 class PointQuadtree {
+public:
+  using value_type = Value;
+  using reference = Value&;
+  using const_reference = Value const&;
+  using Point = Point2D<CoordType>;
+
 private:
 
   class Node;
@@ -33,12 +41,15 @@ private:
 
   class Node {
   public:
-    Key     x, y;
+    Point point;
     Childs  childs;
     mutable Value  val;
 
-    Node(const Key& x, const Key& y, const Value& val):
-      x(x), y(y), val(val) { childs = {0, 0, 0, 0}; }
+    Node(const Point& point, const Value& val) : 
+      point(point), val(val) { childs = {0,0,0,0}; }
+
+    Node(const CoordType& x, const CoordType& y, const Value& val): 
+      point(x,y), val(val) { childs = {0,0,0,0}; }
   };
 
 
@@ -53,8 +64,9 @@ public:
   public:
     NodeVisitor(Node* n): n(n) {}
 
-    const Key& get_x() const { return n->x; }
-    const Key& get_y() const { return n->y; }
+    const CoordType& get_x() const { return n->point.x; }
+    const CoordType& get_y() const { return n->point.y; }
+    const Point& get_point() const { return n->point; }
     Value& operator*() const { return n->val; }
     operator   bool()  const { return (bool) n; }
   };
@@ -63,34 +75,43 @@ public:
   friend class PointQuadtree;
 
   private:
-    Key min_x, min_y;
-    Key max_x, max_y;
+    // min states for the point in the left bottom of the rect
+    // max states for the point in the right top of the rect
+    Point min;
+    Point max;
 
   public:
-    Rect(const Key& min_x, const Key& min_y, const Key& max_x, const Key& max_y) :
-      min_x(min_x), min_y(min_y), max_x(max_x), max_y(max_y) {}
+    Rect(const Point& min, const Point& max): 
+      min(min),
+      max(max) {};
 
-    bool contains(const Key& x, const Key& y) const {
+    Rect(const CoordType& min_x, const CoordType& min_y, const CoordType& max_x, const CoordType& max_y) :
+      min(min_x, min_y),
+      max(max_x, max_y) {}
+
+    bool contains(const Point& p) const {
       bool cx, cy;
-      cx = (x <= max_x && x >= min_x);
-      cy = (y <= max_y && x >= min_y);
+      cx = (p.x <= max.x && p.x >= min.x);
+      cy = (p.y <= max.y && p.y >= min.y);
       return cx && cy;
     }
+
+    bool contains(const CoordType& x, const CoordType& y) const { return contains(Point(x,y)); }
   };
 
   class Circ {
   friend class PointQuadtree;
 
   private:
-    Key org_x;
-    Key org_y;
-    long radius;
+    Point       origin;
+    unsigned long radius;
 
   public:
-    Circ(const Key& ox, const Key& oy, const long& r) :
-      org_x(ox), org_y(oy), radius(r) {}
+    Circ(const CoordType& ox, const CoordType& oy, const unsigned long& r) :
+      origin(ox,oy), radius(r) {}
 
-    bool contains(const Key& x, const Key& y) const {
+    // TODO
+    bool contains(const CoordType& x, const CoordType& y) const {
       bool cx, cy;
       return cx && cy;
     }
@@ -105,27 +126,30 @@ public:
 
   PointQuadtree() : m_root(0) {}
 
-  void insert(const Key& x, const Key& y, const Value& val) {
+  void insert(const Point& p, const Value& val) {
     Node** tmp;
-    if (find(x,y,tmp)) return;
-    (*tmp) = new Node(x,y,val);
+    if (find(p, tmp)) return;
+    (*tmp) = new Node(p, val);
   }
 
-  NodeVisitor find(const Key& x, const Key& y) {
-    Node** tmp;
-    if (!find(x,y,tmp))
-      throw std::runtime_error("Point (" + std::to_string(x) + ", " + std::to_string(y) + ") not found");
+  void insert(const CoordType& x, const CoordType& y, const Value& val) { insert(Point(x,y), val); }
 
+  NodeVisitor find(const Point& p) {
+    Node** tmp;
+    if (!find(p, tmp))
+      throw std::runtime_error("Point (" + std::to_string(p.x) + ", " + std::to_string(p.y) + ") not found");
     return NodeVisitor(*tmp);
   }
 
+  NodeVisitor find(const CoordType& x, const CoordType& y) { return find(Point(x,y)); }
+  
   PointQuadtree ranged_query(const Rect& rect, const VisitorFunction& visitor = [](auto& n){}) {
     PointQuadtree subtree;
     ranged_query(m_root, rect, subtree, visitor);
     return subtree;
   }
 
-  //PointQuadtree radio_query(const Circ& circ) {
+  //PointQuadtree radio_query(const Circ& circ, const VisitorFunction& visitor = [](auto& n){}) {
 
   //}
   
@@ -175,47 +199,47 @@ public:
 
 private:
 
-  bool find(const Key& x, const Key& y, Node**& node) {
+  bool find(const Point& p, Node**& node) {
     node = &m_root;
     while (*node) {
-      if ((*node)->x == x && (*node)->y == y) return true;
-      node = &((*node)->childs[what_quadrant(x,y,*node)]);
+      if ((*node)->point == p) return true;
+      node = &((*node)->childs[what_quadrant(p,*node)]);
     }
     return false;
   }
 
   // Tell me where this coord locates relative to Node orig
-  int what_quadrant(const Key& x, const Key& y, Node* orig) {
-    if (x > orig->x && y >= orig->y)
+  int what_quadrant(const Point& p, Node* orig) {
+    if (p.x > orig->point.x && p.y >= orig->point.y)
       return 0;
-    if (x <= orig->x && y > orig->y)
+    if (p.x <= orig->point.x && p.y > orig->point.y)
       return 1;
-    if (x < orig->x && y <= orig->y)
+    if (p.x < orig->point.x && p.y <= orig->point.y)
       return 2;
-    if (x >= orig->x && y < orig->y)
+    if (p.x >= orig->point.x && p.y < orig->point.y)
       return 3;
   }
 
   void ranged_query(Node* n, const Rect& rect, PointQuadtree& subtree, const VisitorFunction& visitor) {
     if (!n) return;
 
-    if (rect.contains(n->x, n->y)) {
-      subtree.insert(n->x, n->y, n->val);
+    if (rect.contains(n->point)) {
+      subtree.insert(n->point, n->val);
       if (visitor)
         visitor(NodeVisitor(n));
     }
 
-    if (n->x <= rect.max_x) {
-      if (n->y >= rect.min_y)
+    if (n->point.x <= rect.max.x) {
+      if (n->point.y >= rect.min.y)
         ranged_query(n->childs[3], rect, subtree, visitor);
-      if (n->y <= rect.max_y)
+      if (n->point.y <= rect.max.y)
         ranged_query(n->childs[0], rect, subtree, visitor);
     }
 
-    if (n->x >= rect.min_x) {
-      if (n->y >= rect.min_y)
+    if (n->point.x >= rect.min.x) {
+      if (n->point.y >= rect.min.y)
         ranged_query(n->childs[2], rect, subtree, visitor);
-      if (n->y <= rect.max_y)
+      if (n->point.y <= rect.max.y)
         ranged_query(n->childs[1], rect, subtree, visitor);
     }
   }

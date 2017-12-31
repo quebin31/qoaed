@@ -8,42 +8,55 @@
 
 namespace qoaed {
 
-template <class Value, class Key = long>
+template <class Value, class CoordType = long>
 class RegionQuadtree {
+public:
+  using value_type = Value;
+  using reference = Value&;
+  using const_reference = Value const&;
+  using Point = Point2D<CoordType>;
+
 private: 
 
   class Obj {
   public:
-    Key x, y;
+    Point         point;
     mutable Value val;
 
-    Obj(const Key& x, const Key& y, const Value& val) :
-      x(x), y(y), val(val) {}
+    Obj(const Point& p, const Value& val) :
+      point(p), val(val) {}
+
+    Obj(const CoordType& x, const CoordType& y, const Value& val) :
+      point(x,y), val(val) {}
   };
 
-  using Box = typename std::map<Key, std::map<Key, Obj>>;
 
   class Node;
   using Childs = typename std::array<Node*, 4>;
+  using Box    = typename std::map<CoordType, std::map<CoordType, Obj>>;
 
   class Node {
   public:
-    Key min_x, min_y;
-    Key max_x, max_y;
+    // min for left bottom point
+    // max for right top point
+    Point   min;
+    Point   max;
     Childs  childs;
     Box     box;
 
-    Node(const Key& minx, const Key& miny, const Key& maxx, const Key& maxy) :
-      min_x(minx), min_y(miny), max_x(maxx), max_y(maxy) 
-      { childs = {0, 0, 0, 0 }; }
+    Node(const Point& min, const Point& max) : 
+      min(min), max(max) { childs = {0,0,0,0}; }
 
-    void insert(const Key& x, const Key& y, const Value& val) {
+    Node(const CoordType& minx, const CoordType& miny, const CoordType& maxx, const CoordType& maxy) :
+      min(minx, miny), max(maxx, maxy) { childs = {0,0,0,0}; }
+
+    void insert(const CoordType& x, const CoordType& y, const Value& val) {
     }
 
-    void remove(const Key& x, const Key& y) {
+    void remove(const CoordType& x, const CoordType& y) {
     }
 
-    auto find(const Key& x, const Key& y) {
+    auto find(const CoordType& x, const CoordType& y) {
     } 
   };
 
