@@ -100,13 +100,10 @@ public:
   RegionOctree(const Key& max_x, const Key& max_y, const Key& max_z) : m_root(new Node(0, 0, 0, max_x, max_y, max_z)) {}
  ~RegionOctree() = default;
 
-void insert(const Key& x, const Key& y, const Key& z, const Value& val) {
+  void insert(const Key& x, const Key& y, const Key& z, const Value& val) {
     Node** tmp;
     if (find(x,y,z,tmp)) return;
-    else{
-      *tmp=new Node(x,y,z,val);
-    }
-
+    (*tmp) = new Node(x,y,z,val);
   }
 
 private:
