@@ -16,7 +16,7 @@ namespace tools {
 
 enum flags {
   EXPECTING_PROPERTIES = 0x0001,
-  EXPECTING_VERTEXES   = 0x0002,
+  EXPECTING_VERTICES   = 0x0002,
   READING_FINISHED     = 0x0004
 };
 
@@ -38,14 +38,13 @@ std::vector<Point3D<double>> read_off(const std::string& filename) {
 
   int curr_flag = 0;
 
-  std::cout << "first line: " << line << std::endl;
+  //std::cout << "first line: " << line << std::endl;
   if (!std::regex_search(line, std::regex("OFF")))
     throw std::runtime_error("File " + filename + " is not a OFF file type");
   else 
     set_flag(curr_flag, EXPECTING_PROPERTIES);
 
-
-  std::regex  line_point_regex("-?[[:digit:]]+\\.[[:digit:]]+");
+  std::regex  numbers_regex("[+-]?([0-9]+\\.[0-9]+|[0-9]+)");
   std::smatch matchs;
 
   double coord[3];
@@ -56,49 +55,60 @@ std::vector<Point3D<double>> read_off(const std::string& filename) {
     std::getline(file, line);
     no_line += 1;
 
-    std::cout << line << ", " ;
-    std::cout << "flag: " << curr_flag << std::endl;
-    std::cout << "expecting: " << no_coord << std::endl;
+    //std::cout << line << ", " ;
+    //std::cout << "flag: " << curr_flag << std::endl;
+    //std::cout << "expecting: " << no_coord << std::endl;
     // Skip comments
-    if (line[0] == '#' || line.empty())
+    if (std::regex_match(line, std::regex("^(#.*)$")) || line.empty())
       continue;
 
-    if (std::regex_search(line, line_point_regex)) {
-      if (curr_flag & EXPECTING_PROPERTIES) {
-        throw std::runtime_error("Missing properties in OFF file: " + filename + 
-            " error in line " + std::to_string(no_line));
-      } else if (curr_flag & EXPECTING_VERTEXES) {
-        int no_numbers = 0;
-        while (std::regex_search(line, matchs, line_point_regex)) {
-          coord[no_numbers] = std::stod(matchs.str(0));
-          no_numbers += 1;
-          line = matchs.suffix();
-        }
+    if (!std::regex_search(line, numbers_regex)) {
+      if (curr_flag & EXPECTING_PROPERTIES) 
+        throw std::runtime_error("Expecting properties line, get unexpected line, error in line " + std::to_string(no_line));
+      if (curr_flag & EXPECTING_VERTICES)
+        throw std::runtime_error("Expecting vertices line, get unexpected line, error in line " + std::to_string(no_line));
+      
+      // TODO: Starting here are more cases to handle, but for now just interested in vertices
+      if (curr_flag & READING_FINISHED)
+        break;
+    }
 
-        if (no_numbers < 3) 
-          throw std::runtime_error("Missing coordenates in OFF file: " + filename +
-              " error in line " + std::to_string(no_line));
+    if (curr_flag & EXPECTING_PROPERTIES) {
+      if (!std::regex_search(line, matchs, std::regex("([1-9]+|0)")))
+        throw std::runtime_error(
+          "Expecting properties line, get unexpected line, error in line " + 
+          std::to_string(no_line) + 
+          " hint: properties are not floating numbers, they are integers"
+        );
+      no_coord = std::stoi(matchs.str(0));
+      set_flag(curr_flag, EXPECTING_VERTICES);
+      points.reserve(no_coord);
+      continue;
+    }
 
-        points.emplace_back(coord[0], coord[1], coord[2]);
-
-        no_coord -= 1;
-        if (no_coord == 0)
-          set_flag(curr_flag, READING_FINISHED);
-      } else {
-        throw std::runtime_error("Unexpected symbols in line " + std::to_string(no_line));
+    if (curr_flag & EXPECTING_VERTICES) {
+      int no_numbers_in_curr_line = 0;
+      while (std::regex_search(line, matchs, numbers_regex)) {
+        if (no_numbers_in_curr_line >= 3) 
+          throw std::runtime_error(
+            "This line is not vertices line, error in line " + std::to_string(no_line) +
+            " expected vertices line"
+          );
+        coord[no_numbers_in_curr_line] = std::stod(matchs.str(0));
+        no_numbers_in_curr_line += 1;
+        line = matchs.suffix();
       }
 
-    } else {
+      if (no_numbers_in_curr_line < 3)
+        throw std::runtime_error(
+          "Missing vertices in line " + std::to_string(no_line) + " got " + 
+          std::to_string(no_numbers_in_curr_line) + " vertices"
+        );
 
-      if (!(curr_flag & EXPECTING_PROPERTIES || curr_flag & READING_FINISHED)) {
-        throw std::runtime_error("Unexpected symbols in line " + std::to_string(no_line));
-      } else if (!(curr_flag & READING_FINISHED)){
-        if (!std::regex_search(line, matchs, std::regex("(\\d+|0)"))) 
-          throw std::runtime_error("Unexpected symbols in line " + std::to_string(no_line));
-        no_coord   = std::stoi(matchs.str(0));
-        set_flag(curr_flag, EXPECTING_VERTEXES);
-        points.reserve(no_coord);
-      } else { break; }
+      points.emplace_back(coord[0], coord[1], coord[2]);
+      no_coord -= 1;
+      if (no_coord == 0)
+        set_flag(curr_flag, READING_FINISHED);
     }
   }
 
