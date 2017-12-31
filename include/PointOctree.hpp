@@ -282,12 +282,21 @@ private:
   //radio_query...
   /*TAL VEZ
     para octante: (por ejm, si estoy en octante 4)
-        si distancia > r
+        si distancia <= r
+            agregar punto con los de sus hijos 2
+            radio_query para 3,7,6,  1,0,4,5            
+        si no
             descartar, con sus hijos, 4,7.
             radio_query para octantes 2,3,6,  1,0,5
-        si no
-            agregar punto con los de sus hijos 2
-            radio_query para 3,7,6,  1,0,4,5
+    Resumen:
+        4: <=r : 2 | >r: 4,7 
+        7: <=r : 1 | >r: 4,7
+        5: <=r : 3 | >r: 5,6
+        6: <=r : 0 | >r: 5,6
+        1: <=r : 7 | >r: 1,2
+        2: <=r : 4 | >r: 1,2
+        0: <=r : 6 | >r: 0,3
+        3: <=r : 5 | >r: 0,3
   */
   
 };
