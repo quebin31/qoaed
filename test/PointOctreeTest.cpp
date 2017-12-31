@@ -32,9 +32,9 @@ int main(int argc, char** argv) {
   auto rs = po.ranged_query(qoaed::PointOctree<int>::Cube(1,1,1,10,10,10));
   rs.visit_bfs([](auto& n){ std::cout << n.get_x() << ", " << n.get_y() << ", " << *n << std::endl; });
 
-  auto points = qoaed::tools::read_off(argv[1]);
+  auto points = qoaed::tools::read_off<double>(argv[1]);
 
-  qoaed::PointOctree<char, double>* oc = new qoaed::PointOctree<char, double>;
+  auto oc = std::make_shared<qoaed::PointOctree<char, double>>();
   for (int ii = 0; ii < points.size(); ++ii) {
     oc->insert(points[ii].x, points[ii].y, points[ii].z, 'a');
   }

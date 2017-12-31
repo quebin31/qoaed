@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   //qoaed::PointOctree<pcl::PointXYZRGB, double> octree;
 
   pcl::PointXYZRGB p;
-  auto points = qoaed::tools::read_off(argv[1]);
+  auto points = qoaed::tools::read_off<double>(argv[1]);
   for (qoaed::Point3D<double>& t : points) {
     p.x = t.x;
     p.y = t.y;

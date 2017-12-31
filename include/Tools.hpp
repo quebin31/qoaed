@@ -25,9 +25,14 @@ void set_flag(int& c, flags flg) {
   c |= flg;
 }
 
-// Read an off file and return the points
-std::vector<Point3D<double>> read_off(const std::string& filename) {
-  std::vector<Point3D<double>> points;
+template <class T>
+std::vector<Point3D<T>> read_off(const std::string& filename) {
+  static_assert(
+    tools::is_valid_coord_type<T>::value,
+    "You passed an invalid type in read_off, valids are (inherited from Point3D)"
+    "{ short, unsigned short, int, unsigned int, long, unsigned long, float, double }"
+  );
+  std::vector<Point3D<T>> points;
 
   std::ifstream file(filename);
   if (!file) 
@@ -47,7 +52,7 @@ std::vector<Point3D<double>> read_off(const std::string& filename) {
   std::regex  numbers_regex("[+-]?([0-9]+\\.[0-9]+|[0-9]+)");
   std::smatch matchs;
 
-  double coord[3];
+  T   coord[3];
   int no_coord = 0;
   int no_line  = 1;
 
@@ -94,7 +99,8 @@ std::vector<Point3D<double>> read_off(const std::string& filename) {
             "This line is not vertices line, error in line " + std::to_string(no_line) +
             " expected vertices line"
           );
-        coord[no_numbers_in_curr_line] = std::stod(matchs.str(0));
+
+        coord[no_numbers_in_curr_line] = static_cast<T>(std::stod(matchs.str(0)));
         no_numbers_in_curr_line += 1;
         line = matchs.suffix();
       }
