@@ -74,7 +74,7 @@ std::vector<Point3D<double>> read_off(const std::string& filename) {
     }
 
     if (curr_flag & EXPECTING_PROPERTIES) {
-      if (!std::regex_search(line, matchs, std::regex("([1-9]+|0)")))
+      if (!std::regex_search(line, matchs, std::regex("[0-9]+")))
         throw std::runtime_error(
           "Expecting properties line, get unexpected line, error in line " + 
           std::to_string(no_line) + 
