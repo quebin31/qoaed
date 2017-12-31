@@ -1,12 +1,12 @@
 #ifndef QOAED_REGION_OCTREE_HPP
-#define QOAED_REGION_OCTREE_HPP 
+#define QOAED_REGION_OCTREE_HPP
 
 #include <map>
 #include <array>
 
 template <class Value, class Key = long>
 class RegionOctree {
-private: 
+private:
 
   struct Obj {
     Key x, y, z;
@@ -27,7 +27,7 @@ private:
     Box     box;
 
     Node(const Key& minx, const Key& miny, const Key& minz, const Key& maxx, const Key& maxy, const Key& maxz) :
-      min_x(minx), min_y(miny), min_z(minz), max_x(maxx), max_y(maxy), max_z(maxz) 
+      min_x(minx), min_y(miny), min_z(minz), max_x(maxx), max_y(maxy), max_z(maxz)
       { childs = {0, 0, 0, 0, 0, 0, 0, 0}; }
 
     void insert(const Key& x, const Key& y, const Key& z, const Value& val) {
@@ -44,13 +44,13 @@ private:
             zit->second.emplace(z, Obj(x,y,z,val));
           } else {
             return;
-          }  
+          }
         }
       } else {
         auto yit = xit->second.find(y);
         if (yit == xit->second.end())
           xit->second.emplace(y, Obj(x,y,z,val));
-        else 
+        else
           return;
       }
     }
@@ -87,7 +87,7 @@ private:
         throw std:: runtime_error("Cannot found z coord");
 
       return zit->second;
-    } 
+    }
 
     // A leaf node doesn't has childs
     // A non-leaf node has all its childs
@@ -96,15 +96,15 @@ private:
 
   Node* m_root;
 
-public: 
+public:
   RegionOctree(const Key& max_x, const Key& max_y, const Key& max_z) : m_root(new Node(0, 0, 0, max_x, max_y, max_z)) {}
  ~RegionOctree() = default;
-  
-  void insert(const Key& x, const Key& y, const Key& z, const Value& val) {
+
+void insert(const Key& x, const Key& y, const Key& z, const Value& val) {
     Node** tmp;
     if (find(x,y,z,tmp)) return;
     else{
-      
+      *tmp=new Node(x,y,z,val);
     }
 
   }
@@ -116,8 +116,10 @@ private:
     while (*node) {
       try {
         (*node)->find(x,y,z);
-      } catch(std::exception& e) { 
-        
+        return true;
+      } catch(std::exception& e) {
+        int pos = what_quadrant(x,y,z,*node);
+        node=&((*node)->childs[pos]);
       }
     }
     return false;
@@ -129,33 +131,38 @@ private:
       Key middle_z = (n->min_z + n->max_z)/Key(2);
 
       // TODO: Esta bien que todas las comparaciones sean menor o igual ; mayor o igual?
-      if(x >= middle_x && x <= n->max_x && y >= middle_y && y <= n->max_y && z >= n->min_z && z <= middle_z) 
-        return 0;
-      if(x >= n->min_x && x <= middle_x && y >= middle_y && y <= n->max_y && z >= n->min_z && z <= middle_z) 
-        return 1;
-      if(x >= n->min_x && y >= middle_y && z >= n->min_z && x <= middle_x && y <= n->max_y && z <= middle_z) 
-        return 2;
-      if(x >= middle_x && y >= n->min_y && z >= n->min_z && x <= n->max_x && y <= middle_y && z <= middle_z) 
-        return 3;
-      if(x >= middle_x && y >= n->min_y && z >= middle_z && x <= n->max_x && y <= middle_y && z <= n->max_z) 
-        return 4;
-      if(x >= middle_x && y >= middle_y && z >= middle_z && x <= n->max_x && y <= n->max_y && z <= n->max_z) 
-        return 5;
-      if(x >= n->min_x && y >= middle_y && z >= middle_z && x <= middle_x && y <= n->max_y && z <= n->max_z) 
-        return 6;
-      if(x >= n->min_x && y >= n->min_y && z >= middle_z && x <= middle_x && y <= middle_y && z <= n->max_z) 
-        return 7;
+      if(z>=n->min_z && z<=middle_z){
+        if(x>=middle_x && x<=n->max_x){
+            if(y>=middle_y && y<=n->max_y) return 0;
+            else if(y>=n->min_y && y<middle_y) return 3;
+        }
+        else if(x>=n->min_x && x<middle_x){
+            if(y>=middle_y && y<=n->max_y) return 1;
+            else if(y>=n->min_y && y<middle_y) return 2;
+        }
+      }
+      else if(z>middle_z && z<=n->max_z){
+        if(x>=middle_x && x<=n->max_x){
+            if(y>=middle_y && y<=n->max_y) return 5;
+            else if(y>=n->min_y && y<middle_y) return 4;
+        }
+        else if(x>=n->min_x && x<middle_x){
+            if(y>=middle_y && y<=n->max_y) return 6;
+            else if(y>=n->min_y && y<middle_y) return 7;
+        }
+      }
   }
 
   void subdivide(Node* n) {
     Key middle_x = (n->min_x + n->max_x)/Key(2);
     Key middle_y = (n->min_y + n->max_y)/Key(2);
-    Key middle_z = (n->min_z + n->max_z)/Key(2); 
+    Key middle_z = (n->min_z + n->max_z)/Key(2);
 
     n->childs[0] = new Node(middle_x, middle_y, n->min_z, n->max_x, n->max_y, middle_z);
     n->childs[1] = new Node(n->min_x, middle_y, n->min_z, middle_x, n->max_y, middle_z);
     n->childs[2] = new Node(n->min_x, n->min_y, n->min_z, middle_x, middle_y, middle_z);
     n->childs[3] = new Node(middle_x, n->min_y, n->min_z, n->max_x, middle_y, middle_z);
+
     n->childs[4] = new Node(middle_x, n->min_y, middle_z, n->max_x, middle_y, n->max_z);
     n->childs[5] = new Node(middle_x, middle_y, middle_z, n->max_x, n->max_y, n->max_z);
     n->childs[6] = new Node(n->min_x, middle_y, middle_z, middle_x, n->max_y, n->max_z);
