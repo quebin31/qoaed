@@ -36,9 +36,10 @@ std::vector<Point3D<double>> read_off(const std::string& filename) {
   std::string line;
   std::getline(file, line);
 
-  int curr_flag;
+  int curr_flag = 0;
 
-  if (line != "OFF") 
+  std::cout << "first line: " << line << std::endl;
+  if (!std::regex_search(line, std::regex("OFF")))
     throw std::runtime_error("File " + filename + " is not a OFF file type");
   else 
     set_flag(curr_flag, EXPECTING_PROPERTIES);
@@ -55,8 +56,9 @@ std::vector<Point3D<double>> read_off(const std::string& filename) {
     std::getline(file, line);
     no_line += 1;
 
-    //std::cout << line << ", " ;
-    //std::cout << "flag: " << curr_flag << std::endl;
+    std::cout << line << ", " ;
+    std::cout << "flag: " << curr_flag << std::endl;
+    std::cout << "expecting: " << no_coord << std::endl;
     // Skip comments
     if (line[0] == '#' || line.empty())
       continue;
@@ -80,7 +82,6 @@ std::vector<Point3D<double>> read_off(const std::string& filename) {
         points.emplace_back(coord[0], coord[1], coord[2]);
 
         no_coord -= 1;
-        //std::cout << "expecting: " << no_coord << std::endl;
         if (no_coord == 0)
           set_flag(curr_flag, READING_FINISHED);
       } else {
@@ -101,6 +102,7 @@ std::vector<Point3D<double>> read_off(const std::string& filename) {
     }
   }
 
+  file.close();
   return points;
 }
 
