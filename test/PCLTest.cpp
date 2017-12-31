@@ -32,6 +32,7 @@ int main(int argc, char** argv) {
   pcl::visualization::CloudViewer viewer("Viewer");
   viewer.registerPointPickingCallback(foo, &p);
   viewer.showCloud(cloud);
+  viewer.showCloud(cloud);
   while (!viewer.wasStopped()) {}
   return 0;
 }
