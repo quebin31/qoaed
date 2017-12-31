@@ -10,6 +10,12 @@ int main() {
   pqt.insert(12, 2, "P: x");
   pqt.insert(11, 9, "P: y");
 
+  qoaed::PointQuadtree<std::string>::Point p(7, 3);
+  pqt.insert(p, "P: a");
+
+  qoaed::Point2D<long> p2(2, 7);
+  pqt.insert(p2, "P: b");
+
   std::cout << "Visit BFS on pqt:\n";
   pqt.visit_bfs([](auto& n){ std::cout << "x: " << n.get_x() << ", y: " << n.get_y() << ", val: " << *n << '\n'; });
 
@@ -23,6 +29,7 @@ int main() {
   result.visit_bfs([](auto& n){ std::cout << "x: " << n.get_x() << ", y: " << n.get_y() << ", val: " << *n << '\n'; });
 
   auto nvis = pqt.find(4,5);
+  std::cout << "pqt.find(4,5): \n";
   std::cout << nvis.get_x() << ' ' << nvis.get_y() << ' ' << *nvis << std::endl;
 
   return 0;
