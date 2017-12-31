@@ -280,6 +280,15 @@ private:
   }
   
   //radio_query...
+  /*TAL VEZ
+    para octante: (por ejm, si estoy en octante 4)
+        si distancia > r
+            descartar, con sus hijos, 4,5.
+            radio_query para octantes 0,1,3,2,7,6
+        si no
+            agregar punto con los de sus hijos 2,3
+            radio_query para 4,5,6,7,0,1
+  */
   
 };
 
