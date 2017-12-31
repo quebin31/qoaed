@@ -34,8 +34,8 @@ void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {
 
   if (!nvis) std::cerr << "Seems like the point isn't in the octree" << '\n';
   octree->ranged_query(qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube
-    (40, 40, 40, 110, 110, 110),
-    [](auto& p) { (*p)->r = 0; (*p)->g = 0; (*p)->b = 255; }
+    (1, 1, 1, 110, 110, 110),
+    [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; }
   );
 }
 
