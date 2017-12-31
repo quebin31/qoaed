@@ -8,6 +8,8 @@
 #include <queue>
 #include <functional>
 
+#include <iostream>
+
 #include "Point.hpp"
 
 // Octants are identified in this way
@@ -51,19 +53,25 @@ public:
 private: 
 
   class Node;
-  using Childs = std::array<Node*, 8>;
 
   class Node {
   public:
     Point   point;
-    Childs  childs;
+    Node*   childs[8];
     mutable Value val;
 
     Node(const Point& p, const Value& val) : 
-      point(p), val(val) { childs = {0, 0, 0, 0, 0, 0, 0, 0}; }
+      point(p), val(val) { 
+        for (int i = 0; i < 8; ++i)
+          childs[i] = 0;
+      }
 
     Node(const CoordType& x, const CoordType& y, const CoordType& z, const Value& val):
-      point(x,y,z), val(val) { childs = {0, 0, 0, 0, 0, 0, 0, 0}; }
+      point(x,y,z), val(val) { 
+        childs = new Node*[8];
+        for (int i = 0; i < 8; ++i)
+          childs[i] = 0;
+      }
   };
 
 public:
@@ -99,7 +107,7 @@ public:
 
     Cube(const CoordType& min_x, const CoordType& min_y, const CoordType& min_z,
          const CoordType& max_x, const CoordType& max_y, const CoordType& max_z) :
-      min(min_x, min_y, min_z) {}
+      min(min_x, min_y, min_z), max(max_x, max_y, max_z) {}
 
     bool contains(const Point& p) const {
       bool cx, cy, cz;
@@ -118,11 +126,11 @@ private:
   Node* m_root;
 
 public:
-  PointOctree() : m_root(0) {}
+  PointOctree() : m_root(nullptr) {}
  ~PointOctree() = default;
 
   void insert(const Point& p, const Value& val) {
-    Node** tmp;
+    Node** tmp = 0;
     if (find(p, tmp)) return;
     (*tmp) = new Node(p, val);
   }
@@ -130,7 +138,7 @@ public:
   void insert(const CoordType& x, const CoordType& y, const CoordType& z, const Value& val) { insert(Point(x,y,z), val); }
 
   NodeVisitor find(const Point& p) {
-    Node** tmp;
+    Node** tmp = 0;
     if (!find(p, tmp))
       throw std::runtime_error("Point (" + std::to_string(p.x) + ", " + std::to_string(p.y) + ", " + 
           std::to_string(p.z) + ") not found");
@@ -193,42 +201,45 @@ public:
 private:
 
   bool find(const Point& p, Node**& node) {
-    node = &m_root;
+    node = std::addressof(m_root);
+    std::cout << node << ' ' << std::addressof(m_root) << '\n';
     while (*node) {
+      std::cout << node << ' ' << std::addressof(m_root) << '\n';
       if ((*node)->point == p) return true;
-      node = &((*node)->childs[what_octant(p, *node)]);
+      std::cout << "following octant: " << what_octant(p, *node) << '\n';
+      node = std::addressof((*node)->childs[what_octant(p, *node)]);
     }
     return false;
   }
 
   // Tell me where this coord locates relative to Node orig
   int what_octant(const Point& p, Node* orig) {
-    if (p.x > orig->point.x && p.y >= orig->point.y) {
-      if (p.z >= orig->point.z)
-        return 0;
-      else 
-        return 4;
-    }
-
-    if (p.x <= orig->point.x && p.y > orig->point.y) {
-      if (p.z >= orig->point.z)
-        return 1;
-      else 
-        return 5;
-    }
-
-    if (p.x < orig->point.x && p.y <= orig->point.y) {
-      if (p.z >= orig->point.z)
-        return 2;
-      else 
-        return 6;
-    }
-
-    if (p.x >= orig->point.x && p.y < orig->point.y) {
-      if (p.z >= orig->point.z)
-        return 3;
-      else 
-        return 7;
+    std::cout << "p: " << p.x << ' ' << p.y << ' ' << p.z << '\n';
+    std::cout << "n: " << orig->point.x << ' ' << orig->point.y << ' ' << orig->point.z << '\n';
+    if (p.x >= orig->point.x) {
+      if (p.y >= orig->point.y) {
+        if (p.z >= orig->point.z)
+          return 0;
+        else
+          return 4;
+      } else {
+        if (p.z >= orig->point.z)
+          return 3;
+        else
+          return 7;
+      }
+    } else {
+      if (p.y >= orig->point.y) {
+        if (p.z >= orig->point.z)
+          return 1;
+        else 
+          return 5;
+      } else {
+        if (p.z >= orig->point.z)
+          return 2;
+        else 
+          return 6;
+      }
     }
   }
 
