@@ -202,11 +202,8 @@ private:
 
   bool find(const Point& p, Node**& node) {
     node = std::addressof(m_root);
-    std::cout << node << ' ' << std::addressof(m_root) << '\n';
     while (*node) {
-      std::cout << node << ' ' << std::addressof(m_root) << '\n';
       if ((*node)->point == p) return true;
-      std::cout << "following octant: " << what_octant(p, *node) << '\n';
       node = std::addressof((*node)->childs[what_octant(p, *node)]);
     }
     return false;
@@ -214,8 +211,6 @@ private:
 
   // Tell me where this coord locates relative to Node orig
   int what_octant(const Point& p, Node* orig) {
-    std::cout << "p: " << p.x << ' ' << p.y << ' ' << p.z << '\n';
-    std::cout << "n: " << orig->point.x << ' ' << orig->point.y << ' ' << orig->point.z << '\n';
     if (p.x >= orig->point.x) {
       if (p.y >= orig->point.y) {
         if (p.z >= orig->point.z)
@@ -267,7 +262,6 @@ private:
           ranged_query(n->childs[1], cube, subtree, visitor);
       }
     }
-
     if (n->point.x <= cube.max.x) {
       if (n->point.y >= cube.min.y) {
         if (n->point.z >= cube.min.z)

@@ -36,7 +36,6 @@ int main(int argc, char** argv) {
 
   qoaed::PointOctree<char, double>* oc = new qoaed::PointOctree<char, double>;
   for (int ii = 0; ii < points.size(); ++ii) {
-    std::cout << points[ii].x << ' ' << points[ii].y << ' ' << points[ii].z << '\n';
     oc->insert(points[ii].x, points[ii].y, points[ii].z, 'a');
   }
 
