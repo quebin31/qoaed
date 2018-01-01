@@ -41,13 +41,8 @@ void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {/
   );
 
   //spheric_query
-  qoaed::PointOctree<pcl::PointXYZRGB*, float> Node<pcl::PointXYZRGB*, float>** node_point;//puntero a puntero de nodo
-  qoaed::PointOctree<pcl::PointXYZRGB*, float> Node<pcl::PointXYZRGB*, float>** node_parent;//puntero a puntero de nodo
-  if(find (point, node_point, node_parent))
-  {
-    double radio = 10;
-    octree->spheric_query(*node_point, radio,[](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0;});
-  }
+//  double radio = 10;
+//  octree->spheric_query(point, radio,[](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0;});
 
 }
 
