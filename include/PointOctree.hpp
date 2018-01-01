@@ -58,7 +58,7 @@ private:
   class Node {
   public:
     Point   point;
-    Node*   parent = 0;//para mejorar spheric_query, influye en insert
+    Node**   parent = 0;//para mejorar spheric_query, influye en insert
     Node*   childs[8];
     mutable Value val;
 
@@ -133,16 +133,19 @@ public:
 
   void insert(const Point& p, const Value& val) {
     Node** tmp = 0;
-    if (find(p, tmp)) return;
-    (*tmp) = new Node(p, val);
-    p->parent = (*temp);
+     Node** parent = 0;
+    if (find(p, tmp, parent)) return;   
+    Node* n = new Node(p, val);
+    n->parent = parent;
+    (*tmp) = n;
   }
 
   void insert(const CoordType& x, const CoordType& y, const CoordType& z, const Value& val) { insert(Point(x,y,z), val); }
 
   NodeVisitor find(const Point& p) {
     Node** tmp = 0;
-    if (!find(p, tmp))
+    Node** parent = 0;
+    if (!find(p, tmp, parent))
       throw std::runtime_error("Point (" + std::to_string(p.x) + ", " + std::to_string(p.y) + ", " + 
           std::to_string(p.z) + ") not found");
 
@@ -203,10 +206,12 @@ public:
 
 private:
 
-  bool find(const Point& p, Node**& node) {
-    node = std::addressof(m_root);
+  bool find(const Point& p, Node**& node, Node** &parent) {
+    node = std::addressof(m_root);   
+    parent = nullptr; 
     while (*node) {
       if ((*node)->point == p) return true;
+      parent = node;
       node = std::addressof((*node)->childs[what_octant(p, *node)]);
     }
     return false;
@@ -282,8 +287,8 @@ private:
     }
   }
 
-    double distance(Point &a,Point &b){return sqrt(pow(b.x-a.x,2.0)+pow(b.y-a.y,2.0)+pow(b.z-a.z,2.0)) }
-    void spheric_query(const Node *origin, Node *point, const double radio, PointOctree &subtree, const VisitorFunction &visitor);
+    double distance(Point &a,Point &b){return sqrt(pow(b.x-a.x,2.0)+pow(b.y-a.y,2.0)+pow(b.z-a.z,2.0)); }
+
     PointOctree spheric_query(Node *point, const double radio, const VisitorFunction& visitor = [](auto& n){})
     {
         if(point != nullptr){
@@ -320,8 +325,7 @@ private:
             return subtree;
         }
     }
-   
-    add_branch(PointOctree &subtree, Node* node);
+
     void spheric_query(const Node *origin, Node *point, const double radio, PointOctree &subtree, const VisitorFunction &visitor, int arr[][2])
     {
         /*
@@ -346,13 +350,13 @@ private:
             for(int i=0; i!=8; i++){
                 Node* child = point->childs[i];
                 if(child!=nullptr){
-                    if(distance(origin->point, child->point) <= r)
+                    if(distance(origin->point, child->point) <= radio)
                     {
                         subtree.insert(child->point, child->val);
                         if (visitor){
                             visitor(NodeVisitor(child));
                         }
-                        add_branch(subtree, child->childs[arr[i][0]]);
+                        add_branch(subtree, child->childs[arr[i][0]],visitor);
                         int j=0;                
                         while(j!=8){
                             if(j != arr[i][0]){
@@ -376,7 +380,7 @@ private:
         }
     }
     
-    add_branch(PointOctree &subtree, Node* node)
+    void add_branch_(PointOctree &subtree, Node* node,const VisitorFunction &visitor)
     {
         if(node != nullptr){
             subtree.insert(node->point, node->val);
@@ -384,13 +388,13 @@ private:
                         visitor(NodeVisitor(node));
             }
             for(int i=0; i!= 8; i++){
-                add_branch(subtree,childs[i]);
+                add_branch(subtree,node->childs[i],visitor);
             }
         }
     }
-}
-
+    
 };
+
 
 }
 
