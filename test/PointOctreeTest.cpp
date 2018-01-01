@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   rs.visit_bfs([](auto& n){ std::cout << n.get_x() << ", " << n.get_y() << ", " << *n << std::endl; });
 
   auto points = qoaed::tools::read_off<double>(argv[1]);
-
+    
   auto oc = std::make_shared<qoaed::PointOctree<char, double>>();
   for (int ii = 0; ii < points.size(); ++ii) {
     oc->insert(points[ii].x, points[ii].y, points[ii].z, 'a');
