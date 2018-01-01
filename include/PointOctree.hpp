@@ -169,6 +169,8 @@ public:
     PointOctree spheric_query(Point point_, const double radio, const VisitorFunction& visitor = [](auto& n){})
     {
         cerr << "Iniciando spheric_query...\n";
+        cerr << "---------------------------------------------------------\n";
+        cerr << "---------------------------------------------------------\n";
         Node** node_point;
         Node** node_parent;
         find (point_, node_point, node_parent);
