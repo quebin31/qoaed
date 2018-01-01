@@ -135,7 +135,7 @@ public:
     Node** tmp = 0;
     if (find(p, tmp)) return;
     (*tmp) = new Node(p, val);
-    p->parent = (*temp);
+    p->parent = (*tmp);
   }
 
   void insert(const CoordType& x, const CoordType& y, const CoordType& z, const Value& val) { insert(Point(x,y,z), val); }
@@ -282,7 +282,7 @@ private:
     }
   }
 
-    double distance(Point &a,Point &b){return sqrt(pow(b.x-a.x,2.0)+pow(b.y-a.y,2.0)+pow(b.z-a.z,2.0)) }
+    double distance(Point &a,Point &b){return sqrt(pow(b.x-a.x,2.0)+pow(b.y-a.y,2.0)+pow(b.z-a.z,2.0)); }
     void spheric_query(const Node *origin, Node *point, const double radio, PointOctree &subtree, const VisitorFunction &visitor);
     PointOctree spheric_query(Node *point, const double radio, const VisitorFunction& visitor = [](auto& n){})
     {
