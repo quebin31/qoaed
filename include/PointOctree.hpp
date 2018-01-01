@@ -58,7 +58,7 @@ private:
   class Node {
   public:
     Point   point;
-    Node**   parent = 0;//para mejorar spheric_query, influye en insert
+    Node**  parent = 0;//para mejorar spheric_query, influye en insert
     Node*   childs[8];
     mutable Value val;
 
@@ -133,7 +133,7 @@ public:
 
   void insert(const Point& p, const Value& val) {
     Node** tmp = 0;
-     Node** parent = 0;
+    Node** parent = 0;
     if (find(p, tmp, parent)) return;   
     Node* n = new Node(p, val);
     n->parent = parent;
@@ -354,6 +354,7 @@ private:
             }
         }
     }
+
     void spheric_query(const Node *origin, Node *point, const double radio, PointOctree &subtree, const VisitorFunction &visitor, int arr[][2])
     {
         /*
@@ -409,15 +410,12 @@ private:
                             }
                             j++;
                         }
-                        
+                       
                     }
                 }
             }   
         }
     }
-    
-
-    
 };
 
 
