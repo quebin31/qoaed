@@ -23,7 +23,7 @@ void show_version() {
   std::cout << "version: 0.0.1\n";
 }
 
-void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {
+void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {//es bucle. p es la dir del octree que contiene los puntos de la nube
   float x, y, z;
   e.getPoint(x,y,z);
   qoaed::Point3D<float> point(x,y,z);
@@ -33,10 +33,22 @@ void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {
   std::cout << "Clicked " << point.x << ' ' << point.y << ' ' << point.z << '\n';
 
   if (!nvis) std::cerr << "Seems like the point isn't in the octree" << '\n';
+  
+  //ranged_query
   octree->ranged_query(qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube
     (1, 1, 1, 110, 110, 110),
-    [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; }
+    [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; }//como p contiene los puntos de la nube los cambios son a ellos
   );
+
+  //spheric_query
+  qoaed::PointOctree<pcl::PointXYZRGB*, float> Node<pcl::PointXYZRGB*, float>** node_point;//puntero a puntero de nodo
+  qoaed::PointOctree<pcl::PointXYZRGB*, float> Node<pcl::PointXYZRGB*, float>** node_parent;//puntero a puntero de nodo
+  if(find (point, node_point, node_parent))
+  {
+    double radio = 10;
+    octree->spheric_query(*node_point, radio,[](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0;});
+  }
+
 }
 
 int main(int argc, char** argv) {

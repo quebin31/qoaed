@@ -202,20 +202,19 @@ public:
           cont.push(tmp->childs[ii]);
     }
   }
-
+  
+    bool find(const Point& p, Node**& node, Node** &parent) {
+        node = std::addressof(m_root);   
+        parent = nullptr; 
+        while (*node) {
+          if ((*node)->point == p) return true;
+          parent = node;
+          node = std::addressof((*node)->childs[what_octant(p, *node)]);
+        }
+        return false;
+    }
 
 private:
-
-  bool find(const Point& p, Node**& node, Node** &parent) {
-    node = std::addressof(m_root);   
-    parent = nullptr; 
-    while (*node) {
-      if ((*node)->point == p) return true;
-      parent = node;
-      node = std::addressof((*node)->childs[what_octant(p, *node)]);
-    }
-    return false;
-  }
 
   // Tell me where this coord locates relative to Node orig
   int what_octant(const Point& p, Node* orig) {
