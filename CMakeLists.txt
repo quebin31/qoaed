@@ -14,10 +14,17 @@ file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 ## Configure PCL 
 # Search for PCL package
 find_package(PCL 1.3 REQUIRED)
+
+if(NOT "${PCL_LIBRARIES}" STREQUAL "")
+    list(REMOVE_ITEM PCL_LIBRARIES "vtkproj4")
+endif()
+
+
 # Setting up PCL
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
+
 
 include_directories(include)
 
@@ -30,6 +37,7 @@ add_executable(tools           ${TEST_SRC_DIR}/ToolsTest.cpp)
 add_executable(octree_demo     ${TEST_SRC_DIR}/OctreeDemo.cpp)
 
 #target_link_libraries(point_octree ${PCL_LIBRARIES})
+
 target_link_libraries(pcl_lib ${PCL_LIBRARIES})
 target_link_libraries(octree_demo ${PCL_LIBRARIES})
 
@@ -47,3 +55,4 @@ set_target_properties(
 	RUNTIME_OUTPUT_DIRECTORY "${TEST_BIN_DIR}"
   #LINK_LIBRARIES           "${PCL_LIBRARIES}"
 )
+
