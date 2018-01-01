@@ -7,6 +7,7 @@
 #include <stack>
 #include <queue>
 #include <functional>
+#include <cmath>
 
 #include <iostream>
 
@@ -57,6 +58,7 @@ private:
   class Node {
   public:
     Point   point;
+    Node*   parent = 0;//para mejorar spheric_query, influye en insert
     Node*   childs[8];
     mutable Value val;
 
@@ -133,6 +135,7 @@ public:
     Node** tmp = 0;
     if (find(p, tmp)) return;
     (*tmp) = new Node(p, val);
+    p->parent = (*tmp);
   }
 
   void insert(const CoordType& x, const CoordType& y, const CoordType& z, const Value& val) { insert(Point(x,y,z), val); }
@@ -275,6 +278,115 @@ private:
       }
     }
   }
+
+    double distance(Point &a,Point &b){return sqrt(pow(b.x-a.x,2.0)+pow(b.y-a.y,2.0)+pow(b.z-a.z,2.0)); }
+    void spheric_query(const Node *origin, Node *point, const double radio, PointOctree &subtree, const VisitorFunction &visitor);
+    PointOctree spheric_query(Node *point, const double radio, const VisitorFunction& visitor = [](auto& n){})
+    {
+        if(point != nullptr){
+            PointOctree subtree;
+            Node *origin = point;
+            //selects adecuade point according to radio
+            while(origin != m_root && distance(origin->point, origin->parent->point) <= radio)
+            {
+                origin = origin->parent;
+            }
+            if(distance(point->point, origin->point) > radio && origin != m_root)//si punto con el que se va a trabajar y radio no contienen al punto original, que le punto sea el padre
+            {
+                origin = origin->parent;
+            }
+            //work selecting spheric points
+            int arr[8][2]; //used inside spheric_query
+            arr[0][0]= 6;
+            arr[0][1]= 0;
+            arr[1][0]= 7;
+            arr[1][1]= 1;
+            arr[2][0]= 4;
+            arr[2][1]= 2;
+            arr[3][0]= 5;
+            arr[3][1]= 3;
+            arr[4][0]= 2;
+            arr[4][1]= 4;
+            arr[5][0]= 3;
+            arr[5][1]= 5;
+            arr[6][0]= 0;
+            arr[6][1]= 6;
+            arr[7][0]= 1;
+            arr[7][1]= 7;
+            spheric_query(origin, origin, radio, subtree, visitor, arr);//origin de nodo central y el otro se usara para trabajar
+            return subtree;
+        }
+    }
+   
+    add_branch(PointOctree &subtree, Node* node);
+    void spheric_query(const Node *origin, Node *point, const double radio, PointOctree &subtree, const VisitorFunction &visitor, int arr[][2])
+    {
+        /*
+        para octante: (por ejm, si estoy en octante 4)
+            si distancia <= r
+                agregar punto y su hijo 2
+                spheric_query para 3,7,6,  1,0,4,5            
+            si no
+                descartar punto y su hijo 4
+                spheric_query para octantes 2,3,7,6,  1,0,5
+        Resumen:
+            4: <=r : 2 | >r: 4 
+            7: <=r : 1 | >r: 7
+            5: <=r : 3 | >r: 5
+            6: <=r : 0 | >r: 6
+            1: <=r : 7 | >r: 1
+            2: <=r : 4 | >r: 2
+            0: <=r : 6 | >r: 0
+            3: <=r : 5 | >r: 3
+        */
+        if(point != nullptr){
+            for(int i=0; i!=8; i++){
+                Node* child = point->childs[i];
+                if(child!=nullptr){
+                    if(distance(origin->point, child->point) <= r)
+                    {
+                        subtree.insert(child->point, child->val);
+                        if (visitor){
+                            visitor(NodeVisitor(child));
+                        }
+                        add_branch(subtree, child->childs[arr[i][0]]);
+                        int j=0;                
+                        while(j!=8){
+                            if(j != arr[i][0]){
+                                 spheric_query(origin, child->childs[j],radio, subtree, visitor,arr);
+                            }
+                            j++;
+                        }
+                    }
+                    else
+                    {
+                        int j=0; 
+                        while(j!=8){
+                            if(j != arr[i][1]){
+                                 spheric_query(origin, child->childs[j],radio, subtree, visitor,arr);
+                            }
+                        }
+                        j++;
+                    }
+                }
+            }   
+        }
+    }
+    
+    add_branch(PointOctree &subtree, Node* node)
+    {
+        if(node != nullptr){
+            subtree.insert(node->point, node->val);
+            if (visitor){
+                        visitor(NodeVisitor(node));
+            }
+            for(int i=0; i!= 8; i++){
+                add_branch(subtree,childs[i]);
+            }
+        }
+    }
+}
+
 };
 
 }
