@@ -58,7 +58,7 @@ private:
   class Node {
   public:
     Point   point;
-    Node* parent = 0;//para mejorar spheric_query, influye en insert
+    Node*   parent = 0;//para mejorar spheric_query, influye en insert
     Node*   childs[8];
     mutable Value val;
 
@@ -283,7 +283,7 @@ private:
   }
 
     double distance(Point &a,Point &b){return sqrt(pow(b.x-a.x,2.0)+pow(b.y-a.y,2.0)+pow(b.z-a.z,2.0)) }
-    void spheric_query(Node *origin, Node *point = nullptr, const double radio, PointOctree &subtree, const VisitorFunction &visitor);
+    void spheric_query(const Node *origin, Node *point, const double radio, PointOctree &subtree, const VisitorFunction &visitor);
     PointOctree spheric_query(Node *point, const double radio, const VisitorFunction& visitor = [](auto& n){})
     {
         if(point != nullptr){
@@ -294,8 +294,12 @@ private:
             {
                 origin = origin->parent;
             }
+            if(distance(point->point, origin->point) > radio)//si punto con el que se va a trabajar y radio no contienen al punto original, que le punto sea el padre
+            {
+                origin = origin->parent;
+            }
             //work selecting spheric points
-            int arr[8][3]; //used inside spheric_query
+            int arr[8][2]; //used inside spheric_query
             arr[0][0]= 6;
             arr[0][1]= 0;
             arr[1][0]= 7;
@@ -312,12 +316,13 @@ private:
             arr[6][1]= 6;
             arr[7][0]= 1;
             arr[7][1]= 7;
-            spheric_query(origin, radio, subtree, visitor, arr);
+            spheric_query(origin, origin, radio, subtree, visitor, arr);//origin de nodo central y el otro se usara para trabajar
             return subtree;
         }
     }
    
-    void spheric_query(Node *origin, Node *point, const double radio, PointOctree &subtree, const VisitorFunction &visitor, int arr[][3])
+    add_branch(PointOctree &subtree, Node* node);
+    void spheric_query(const Node *origin, Node *point, const double radio, PointOctree &subtree, const VisitorFunction &visitor, int arr[][2])
     {
         /*
         para octante: (por ejm, si estoy en octante 4)
@@ -338,32 +343,45 @@ private:
             3: <=r : 5 | >r: 3
         */
         for(int i=0; i!=8; i++){
-            if(distance(origin->point, childs[i]->point) <= r)
-            {
-                subtree.insert(childs[i]->point, childs[i]->val);
-                if (visitor){
-                    visitor(NodeVisitor(n));
+            Node* child = point->childs[i];//point es != de nulo
+            if(child!=nullptr){
+                if(distance(origin->point, child->point) <= r)
+                {
+                    subtree.insert(child->point, child->val);
+                    if (visitor){
+                        visitor(NodeVisitor(n));
+                    }
+                    add_branch(subtree, child->childs[arr[i][0]]);
+                    int j=0;                
+                    while(j!=8){
+                        if(j != arr[i][0]){
+                             spheric_query(origin, child->childs[j],radio, subtree, visitor,arr);
+                        }
+                        j++;
+                    }
                 }
-                add_branch(subtree, childs[i]->childs[arr[i][0]]);
-                int j=0;                
-                while(j!=8){
-                    if(j != arr[i][0]){
-                         spheric_query(origin, childs[i]->childs[j],radio, subtree, visitor);
+                else
+                {
+                    int j=0; 
+                    while(j!=8){
+                        if(j != arr[i][1]){
+                             spheric_query(origin, child->childs[j],radio, subtree, visitor,arr);
+                        }
                     }
                     j++;
                 }
             }
-            else
-            {
-                int j=0; 
-                while(j!=8){
-                    if(j != arr[i][1]){
-                         spheric_query(origin, childs[i]->childs[j],radio, subtree, visitor);
-                    }
-                }
-                j++;
-            }
         }   
+    }
+    
+    add_branch(PointOctree &subtree, Node* node)
+    {
+        if(node != nullptr){
+            subtree.insert(node->point, node->val);
+            for(int i=0; i!= 8; i++){
+                add_branch(subtree,childs[i]);
+            }
+        }
     }
 }
 
