@@ -294,7 +294,7 @@ private:
             {
                 origin = origin->parent;
             }
-            if(distance(point->point, origin->point) > radio)//si punto con el que se va a trabajar y radio no contienen al punto original, que le punto sea el padre
+            if(distance(point->point, origin->point) > radio && origin != m_root)//si punto con el que se va a trabajar y radio no contienen al punto original, que le punto sea el padre
             {
                 origin = origin->parent;
             }
@@ -342,42 +342,47 @@ private:
             0: <=r : 6 | >r: 0
             3: <=r : 5 | >r: 3
         */
-        for(int i=0; i!=8; i++){
-            Node* child = point->childs[i];//point es != de nulo
-            if(child!=nullptr){
-                if(distance(origin->point, child->point) <= r)
-                {
-                    subtree.insert(child->point, child->val);
-                    if (visitor){
-                        visitor(NodeVisitor(n));
+        if(point != nullptr){
+            for(int i=0; i!=8; i++){
+                Node* child = point->childs[i];
+                if(child!=nullptr){
+                    if(distance(origin->point, child->point) <= r)
+                    {
+                        subtree.insert(child->point, child->val);
+                        if (visitor){
+                            visitor(NodeVisitor(child));
+                        }
+                        add_branch(subtree, child->childs[arr[i][0]]);
+                        int j=0;                
+                        while(j!=8){
+                            if(j != arr[i][0]){
+                                 spheric_query(origin, child->childs[j],radio, subtree, visitor,arr);
+                            }
+                            j++;
+                        }
                     }
-                    add_branch(subtree, child->childs[arr[i][0]]);
-                    int j=0;                
-                    while(j!=8){
-                        if(j != arr[i][0]){
-                             spheric_query(origin, child->childs[j],radio, subtree, visitor,arr);
+                    else
+                    {
+                        int j=0; 
+                        while(j!=8){
+                            if(j != arr[i][1]){
+                                 spheric_query(origin, child->childs[j],radio, subtree, visitor,arr);
+                            }
                         }
                         j++;
                     }
                 }
-                else
-                {
-                    int j=0; 
-                    while(j!=8){
-                        if(j != arr[i][1]){
-                             spheric_query(origin, child->childs[j],radio, subtree, visitor,arr);
-                        }
-                    }
-                    j++;
-                }
-            }
-        }   
+            }   
+        }
     }
     
     add_branch(PointOctree &subtree, Node* node)
     {
         if(node != nullptr){
             subtree.insert(node->point, node->val);
+            if (visitor){
+                        visitor(NodeVisitor(node));
+            }
             for(int i=0; i!= 8; i++){
                 add_branch(subtree,childs[i]);
             }
