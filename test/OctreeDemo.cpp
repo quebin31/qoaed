@@ -41,8 +41,8 @@ void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {/
 //  );
 
   //spheric_query
-    double radio = 5;
-    octree->spheric_query(point, radio,[](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0;});
+//    double radio = 5;
+//    octree->spheric_query(point, radio,[](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0;});
 
 }
 
