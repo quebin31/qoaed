@@ -135,10 +135,7 @@ public:
     Sphere(const CoordType& cx, const CoordType& cy, const double& radio) :
       center(cx, cy), radio(radio) {}
 
-    bool contains(const Point& p) const {
-
-    }
-
+    bool contains(const Point& p) const { return center.distance_wo_sqrt(p) <= (radio * radio); }
     bool contains(const CoordType& x, const CoordType& y, const CoordType& z) const { return contains(Point(x,y,z)); }
   };
 

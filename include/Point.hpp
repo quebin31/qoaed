@@ -39,6 +39,12 @@ public:
 
   bool operator==(const Point2D& p) const { return x == p.x && y == p.y;}
   bool operator!=(const Point2D& p) const { return x != p.x || y != p.y; }
+
+  double distance_wo_sqrt(const Point2D& p) const { 
+    T delta_x = p.x - x;
+    T delta_y = p.y - y;
+    return static_cast<double>(delta_x * delta_x + delta_y * delta_y);
+  }
 };
 
 template <class T>
@@ -72,9 +78,15 @@ public:
     );
   }
 
-
   bool operator==(const Point3D& p) const { return x == p.x && y == p.y && z == p.z; }
   bool operator!=(const Point3D& p) const { return x != p.x || y != p.y || z != p.z; }
+
+  double distance_wo_sqrt(const Point3D& p) const {
+    T delta_x = p.x - x;
+    T delta_y = p.y - y;
+    T delta_z = p.z - z;
+    return static_cast<double>(delta_x * delta_x + delta_y * delta_y + delta_z * delta_z);
+  }
 };
 
 }
