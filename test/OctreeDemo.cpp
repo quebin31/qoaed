@@ -32,18 +32,18 @@ void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {/
 
   std::cout << "Clicked " << point.x << ' ' << point.y << ' ' << point.z << '\n';
 
-  if (!nvis) std::cerr << "Seems like the point isn't in the octree" << '\n';
-  
+  if (!nvis) {
+    std::cerr << "Seems like the point isn't in the octree" << '\n';
+    return;
+  }
+
   //ranged_query
-//  octree->ranged_query(qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube
-//    (1, 1, 1, 110, 110, 110),
-//    [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; }//como p contiene los puntos de la nube los cambios son a ellos
-//  );
+  //qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube cube(1,1,1,10,10,10);
+  //octree->ranged_query(cube, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
 
   //spheric_query
-    double radio = 100;
-    octree->spheric_query(point, radio,[](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0;});
-
+  qoaed::PointOctree<pcl::PointXYZRGB*, float>::Sphere sphere(nvis.get_point(), 100);
+  octree->spheric_query(sphere, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
 }
 
 int main(int argc, char** argv) {
