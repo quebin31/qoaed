@@ -17,7 +17,7 @@ public:
     static_assert(
       tools::is_valid_coord_type<T>::value,
       "You passed an invalid type in Point2D, valids are "
-      "{ short, unsigned short, int, unsigned int, long, unsigned long, float, double }"
+      "{ short, int, long, float, double }"
     );
   } 
 
@@ -25,7 +25,7 @@ public:
     static_assert(
       tools::is_valid_coord_type<T>::value,
       "You passed an invalid type in Point2D, valids are "
-      "{ short, unsigned short, int, unsigned int, long, unsigned long, float, double }"
+      "{ short, int, long, float, double }"
     );
   }
 
@@ -33,7 +33,7 @@ public:
     static_assert(
       tools::is_valid_coord_type<T>::value,
       "You passed an invalid type in Point2D, valids are "
-      "{ short, unsigned short, int, unsigned int, long, unsigned long, float, double }"
+      "{ short, int, long, float, double }"
     );
   }
 
@@ -58,7 +58,7 @@ public:
     static_assert(
       tools::is_valid_coord_type<T>::value,
       "You passed an invalid type in Point3D, valids are "
-      "{ short, unsigned short, int, unsigned int, long, unsigned long, float, double }"
+      "{ short, int, long, float, double }"
     );
   }
 
@@ -66,7 +66,7 @@ public:
     static_assert(
       tools::is_valid_coord_type<T>::value,
       "You passed an invalid type in Point3D, valids are "
-      "{ short, unsigned short, int, unsigned int, long, unsigned long, float, double }"
+      "{ short, int, long, float, double }"
     );
   }
 
@@ -74,7 +74,7 @@ public:
     static_assert(
       tools::is_valid_coord_type<T>::value,
       "You passed an invalid type in Point3D, valids are "
-      "{ short, unsigned short, int, unsigned int, long, unsigned long, float, double }"
+      "{ short, int, long, float, double }"
     );
   }
 
