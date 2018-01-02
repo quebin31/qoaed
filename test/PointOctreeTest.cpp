@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
   po.visit_bfs([](auto& n){ std::cout << n.get_x() << ", " << n.get_y() << ", " << *n << std::endl; });
 
   std::cout << "Subtree ranged query (1,1,1) (10,10,10): \n";
-  auto rs = po.ranged_query(qoaed::PointOctree<int>::Cube(1,1,1,10,10,10));
+  auto rs = po.cubic_query(qoaed::PointOctree<int>::Cube(1,1,1,10,10,10));
   rs.visit_bfs([](auto& n){ std::cout << n.get_x() << ", " << n.get_y() << ", " << *n << std::endl; });
 
   auto points = qoaed::tools::read_off<double>(argv[1]);

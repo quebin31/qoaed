@@ -1,5 +1,6 @@
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/visualization/point_picking_event.h>
+#include <pcl/visualization/keyboard_event.h>
 #include <iostream>
 #include <cstring>
 #include "Tools.hpp"
@@ -23,7 +24,18 @@ void show_version() {
   std::cout << "version: 0.0.1\n";
 }
 
-void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {//es bucle. p es la dir del octree que contiene los puntos de la nube
+void keyboard_events(const pcl::visualization::KeyboardEvent& e, void *p) {
+  if (!e.keyUp()) return;
+
+  auto keycode = e.getKeyCode();
+  if (keycode != 'z') return;
+
+  auto octree = *(std::shared_ptr<qoaed::PointOctree<pcl::PointXYZRGB*, float>>*) p;
+  octree->visit_dfs([](auto& p){ (*p)->r = 255; (*p)->g = 255; (*p)->b = 255; });
+  std::cout << "Restarted all points" << std::endl;
+}
+
+void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {
   float x, y, z;
   e.getPoint(x,y,z);
   qoaed::Point3D<float> point(x,y,z);
@@ -37,13 +49,17 @@ void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {/
     return;
   }
 
+  double radio;
+  std::cout << "Input a radio: ";
+  std::cin  >> radio;
+
   //ranged_query
-  qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube cube(-3, -3, -3, 3, 3, 3);
-  octree->ranged_query(cube, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
+  //qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube cube(nvis.get_point(), radio);
+  //octree->cubic_query(cube, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
 
   //spheric_query
-  //qoaed::PointOctree<pcl::PointXYZRGB*, float>::Sphere sphere(nvis.get_point(), 100);
-  //octree->spheric_query(sphere, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
+  qoaed::PointOctree<pcl::PointXYZRGB*, float>::Sphere sphere(nvis.get_point(), radio);
+  octree->spheric_query(sphere, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
 }
 
 int main(int argc, char** argv) {
@@ -94,6 +110,7 @@ int main(int argc, char** argv) {
 
 
     cloud_viewer.registerPointPickingCallback(point_pick_func, &octree);
+    cloud_viewer.registerKeyboardCallback(keyboard_events, &octree);
     cloud_viewer.showCloud(cloud);
     while (!cloud_viewer.wasStopped(100)) 
       cloud_viewer.showCloud(cloud);

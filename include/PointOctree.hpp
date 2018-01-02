@@ -99,25 +99,38 @@ public:
   friend class PointOctree;
 
   private:
-    // min is one point in the bottom in any corner
-    // max is other point in the top in opposite to min point
-    // both need to form a diagonal
+    // both points for a diagonal and it's guaranteed that 
+    // they are respectively min and max coordenates of cube
     Point min;
     Point max;
 
   public:
-    Cube(const Point& min, const Point& max) : min(min), max(max) {}
+    Cube(const Point& bot, const Point& top) {
+      min.x = std::min(bot.x, top.x);
+      min.y = std::min(bot.y, top.y);
+      min.z = std::min(bot.z, top.z);
 
-    Cube(const CoordType& min_x, const CoordType& min_y, const CoordType& min_z,
-         const CoordType& max_x, const CoordType& max_y, const CoordType& max_z) :
-      min(min_x, min_y, min_z), max(max_x, max_y, max_z) {}
+      max.x = std::max(bot.x, top.x);
+      max.y = std::max(bot.y, top.y);
+      max.z = std::max(bot.z, top.z);
+    }
 
-    Cube(const CoordType& center, double radio) {
+    Cube(const CoordType& bot_x, const CoordType& bot_y, const CoordType& bot_z,
+         const CoordType& top_x, const CoordType& top_y, const CoordType& top_z) :
+      Cube(Point(bot_x, bot_y, bot_z), Point(top_x, top_y, top_z)) {}
+
+    Cube(const Point& center, double radio) {
       if (radio < 0) throw std::runtime_error("Radio cannot be negative");
       if constexpr(!std::is_same<CoordType, double>::value && !std::is_same<CoordType, float>::value)
         radio = std::round(radio);
 
+      min.x = center.x - (CoordType) radio;
+      min.y = center.y - (CoordType) radio;
+      min.z = center.z - (CoordType) radio;
 
+      max.x = center.x + (CoordType) radio;
+      max.y = center.y + (CoordType) radio;
+      max.z = center.z + (CoordType) radio;
     }
 
     bool contains(const Point& p) const {
@@ -143,6 +156,10 @@ public:
 
     Sphere(const CoordType& cx, const CoordType& cy, const double& radio) :
       center(cx, cy), radio(radio) {}
+
+    Sphere(const Point& center, const Point& super) : center(center) {
+      radio = std::sqrt(center.distance_wo_sqrt(super));
+    }
 
     bool contains(const Point& p) const { return center.distance_wo_sqrt(p) <= (radio * radio); }
     bool contains(const CoordType& x, const CoordType& y, const CoordType& z) const { return contains(Point(x,y,z)); }
@@ -178,103 +195,17 @@ public:
 
   NodeVisitor find(const CoordType& x, const CoordType& y, const CoordType& z) { return find(Point(x,y,z)); }
 
-  PointOctree ranged_query(const Cube& cube, const VisitorFunction& visitor = [](auto& n){}) {
+  PointOctree cubic_query(const Cube& cube, const VisitorFunction& visitor = [](auto& n){}) {
     PointOctree subtree;
-    ranged_query(m_root, cube, subtree, visitor);
+    cubic_query(m_root, cube, subtree, visitor);
     return subtree;
   }
 
   PointOctree spheric_query(const Sphere& sphere, const VisitorFunction& visitor = [](auto& n){}) {
-    NodeVisitor node = find(sphere.center);
     PointOctree subtree;
-
-    if (!node) return subtree;
-
-    Node* origin = node.n;
-    while (origin != m_root && distance(origin->point, origin->parent->point) <= sphere.radio) 
-      origin = origin->parent;
-
-    if (origin != m_root && distance(node.get_point(), origin->point) > sphere.radio)
-      origin = origin->parent;
-
-    int arr[8][2];
-
-    arr[0][0]= 6;
-    arr[0][1]= 0;
-    arr[1][0]= 7;
-    arr[1][1]= 1;
-    arr[2][0]= 4;
-    arr[2][1]= 2;
-    arr[3][0]= 5;
-    arr[3][1]= 3;
-    arr[4][0]= 2;
-    arr[4][1]= 4;
-    arr[5][0]= 3;
-    arr[5][1]= 5;
-    arr[6][0]= 0;
-    arr[6][1]= 6;
-    arr[7][0]= 1;
-    arr[7][1]= 7;
-
-    spheric_query(origin, Sphere(origin->point, sphere.radio), subtree, visitor, arr);
+    spheric_query(m_root, sphere, subtree, visitor);
     return subtree;
   }
-  
-  PointOctree spheric_query(const Point& center, const double& radio, const VisitorFunction& visitor = [](auto& n){}) {
-    //std::cerr << "Iniciando spheric_query...\n";
-    
-    Node** node;
-    Node*  parent;
-
-    PointOctree subtree;
-    if (!find(center, node, parent)) 
-      return subtree;
-    //std::cerr << "point != null\n";
-
-    Node* point  = *node;
-    Node* origin = *node;
-
-    //selects adecuade point according to radio
-    while (origin != m_root && distance(origin->point, (*(origin->parent))->point) <= radio) {
-      std::cerr << "cambia de origin\n";
-      origin = *(origin->parent);
-    }
-
-    //si punto con el que se va a trabajar y radio no contienen al punto original, que el punto sea el padre
-    if (origin != m_root && distance(point->point, origin->point) > radio) {
-      std::cerr << "que origin sea el padre\n";
-      origin = *(origin->parent);
-    }
-
-    //work selecting spheric points
-    //used inside spheric_query
-    int arr[8][2]; 
-
-    arr[0][0]= 6;
-    arr[0][1]= 0;
-    arr[1][0]= 7;
-    arr[1][1]= 1;
-    arr[2][0]= 4;
-    arr[2][1]= 2;
-    arr[3][0]= 5;
-    arr[3][1]= 3;
-    arr[4][0]= 2;
-    arr[4][1]= 4;
-    arr[5][0]= 3;
-    arr[5][1]= 5;
-    arr[6][0]= 0;
-    arr[6][1]= 6;
-    arr[7][0]= 1;
-    arr[7][1]= 7;
-
-    //std::cerr << "inicia spheric_query verdadero\n";
-
-    //origin de nodo central y el otro se usara para trabajar
-    spheric_query(origin, origin, radio, subtree, visitor, arr);
-    //std::cerr<<"No hay punto detectado\n";
-    return subtree;
-  }
-
 
   void visit_dfs(const std::function<void (const NodeVisitor&)>& visitor, NodeVisitor start = NodeVisitor(0)) {
     if (!m_root) return;
@@ -321,11 +252,6 @@ public:
 
 private:
 
-  double distance(const Point& a, const Point& b) {
-    //std::cerr << "distancia: "<< sqrt(pow(b.x-a.x,2.0)+pow(b.y-a.y,2.0)+pow(b.z-a.z,2.0)) <<'\n';
-    return sqrt(pow(b.x - a.x, 2.0) + pow(b.y - a.y, 2.0) + pow(b.z - a.z, 2.0)); 
-  }
-
   bool find(const Point& p, Node**& node, Node*& parent) {
     node   = std::addressof(m_root);   
     parent = nullptr; 
@@ -366,7 +292,7 @@ private:
     }
   }
 
-  void ranged_query(Node* n, const Cube& cube, PointOctree& subtree, const VisitorFunction& visitor) {
+  void cubic_query(Node* n, const Cube& cube, PointOctree& subtree, const VisitorFunction& visitor) {
     if (!n) return;
 
     if (cube.contains(n->point)) {
@@ -378,149 +304,76 @@ private:
     if (n->point.x >= cube.min.x) {
       if (n->point.y >= cube.min.y) {
         if (n->point.z >= cube.min.z)
-          ranged_query(n->childs[6], cube, subtree, visitor);
+          cubic_query(n->childs[6], cube, subtree, visitor);
         if (n->point.z <= cube.max.z)
-          ranged_query(n->childs[2], cube, subtree, visitor);
+          cubic_query(n->childs[2], cube, subtree, visitor);
       }
 
       if (n->point.y <= cube.max.y) {
         if (n->point.z >= cube.min.z)
-          ranged_query(n->childs[5], cube, subtree, visitor);
+          cubic_query(n->childs[5], cube, subtree, visitor);
         if (n->point.z <= cube.max.z)
-          ranged_query(n->childs[1], cube, subtree, visitor);
+          cubic_query(n->childs[1], cube, subtree, visitor);
       }
     }
 
     if (n->point.x <= cube.max.x) {
       if (n->point.y >= cube.min.y) {
         if (n->point.z >= cube.min.z)
-          ranged_query(n->childs[7], cube, subtree, visitor);
+          cubic_query(n->childs[7], cube, subtree, visitor);
         if (n->point.z <= cube.max.z)
-          ranged_query(n->childs[3], cube, subtree, visitor);
+          cubic_query(n->childs[3], cube, subtree, visitor);
       }
 
       if (n->point.y <= cube.max.y) {
         if (n->point.z >= cube.min.z)
-          ranged_query(n->childs[4], cube, subtree, visitor);
+          cubic_query(n->childs[4], cube, subtree, visitor);
         if (n->point.z <= cube.max.z)
-          ranged_query(n->childs[0], cube, subtree, visitor);
+          cubic_query(n->childs[0], cube, subtree, visitor);
       }
     }
   }
 
-  void add_branch(PointOctree &subtree, Node* node, const VisitorFunction &visitor) {
-    //std::cerr << "add_branch\n";
-    if (!node) return;
+  void spheric_query(Node* n, const Sphere& sphere, PointOctree& subtree, const VisitorFunction& visitor) {
+    if (!n) return;
 
-    subtree.insert(node->point, node->val);
-    if (visitor)
-      visitor(NodeVisitor(node));
+    if (sphere.contains(n->point)) {
+      subtree.insert(n->point, n->val);
+      if (visitor)
+        visitor(NodeVisitor(n));
+    }
 
-    for(int ii = 0; ii < 8; ++ii)
-      add_branch(subtree, node->childs[ii], visitor);
-  }
+    Cube cube(sphere.center, sphere.radio);
 
-  void spheric_query(Node* node, const Sphere& sphere, PointOctree& subtree, const VisitorFunction& visitor, int arr[][2]) {
-    /* Para octante: (Ejm, estando en el octante 4)
-     * Si distancia <= r
-     *    agregar punto y su hijo 2
-     *    spheric_query para 3,7,6,  1,0,4,5            
-     * Si no
-     *    descartar punto y su hijo 4
-     *    spheric_query para octantes 2,3,7,6,  1,0,5
-     *
-     * Resumen:
-     *  4: <=r : 2 | >r: 4 
-     *  7: <=r : 1 | >r: 7
-     *  5: <=r : 3 | >r: 5
-     *  6: <=r : 0 | >r: 6
-     *  1: <=r : 7 | >r: 1
-     *  2: <=r : 4 | >r: 2
-     *  0: <=r : 6 | >r: 0
-     *  3: <=r : 5 | >r: 3
-     */
+    if (n->point.x >= cube.min.x) {
+      if (n->point.y >= cube.min.y) {
+        if (n->point.z >= cube.min.z)
+          spheric_query(n->childs[6], sphere, subtree, visitor);
+        if (n->point.z <= cube.max.z)
+          spheric_query(n->childs[2], sphere, subtree, visitor);
+      }
 
-    if (!node) return;
-
-    Node* child;
-    for (int ii = 0; ii < 8; ++ii) {
-      child = node->childs[ii];
-      if (!child) continue;
-
-      if (distance(sphere.center, node->point) <= sphere.radio) {
-        subtree.insert(child->point, child->val);
-        if (visitor)
-          visitor(NodeVisitor(child));
-
-        add_branch(subtree, child->childs[arr[ii][0]], visitor);
-        for (int jj = 0; jj < 8; ++jj) {
-          if (jj == arr[ii][0]) continue;
-          spheric_query(child->childs[jj], sphere, subtree, visitor, arr);
-        }
-
-      } else {
-
-        for (int jj = 0; jj < 8; ++jj) {
-          if (jj == arr[ii][1]) continue;
-          spheric_query(child->childs[jj], sphere, subtree, visitor, arr);
-        }
-
+      if (n->point.y <= cube.max.y) {
+        if (n->point.z >= cube.min.z)
+          spheric_query(n->childs[5], sphere, subtree, visitor);
+        if (n->point.z <= cube.max.z)
+          spheric_query(n->childs[1], sphere, subtree, visitor);
       }
     }
-  }
 
-  void spheric_query(Node *origin, Node *point, const double radio, PointOctree &subtree, const VisitorFunction &visitor, int arr[][2]) {
-    /* para octante: (por ejm, si estoy en octante 4)
-      si distancia <= r
-          agregar punto y su hijo 2
-          spheric_query para 3,7,6,  1,0,4,5            
-      si no
-          descartar punto y su hijo 4
-          spheric_query para octantes 2,3,7,6,  1,0,5
-    Resumen:
-        4: <=r : 2 | >r: 4 
-        7: <=r : 1 | >r: 7
-        5: <=r : 3 | >r: 5
-        6: <=r : 0 | >r: 6
-        1: <=r : 7 | >r: 1
-        2: <=r : 4 | >r: 2
-        0: <=r : 6 | >r: 0
-        3: <=r : 5 | >r: 3
-    */
+    if (n->point.x <= cube.max.x) {
+      if (n->point.y >= cube.min.y) {
+        if (n->point.z >= cube.min.z)
+          spheric_query(n->childs[7], sphere, subtree, visitor);
+        if (n->point.z <= cube.max.z)
+          spheric_query(n->childs[3], sphere, subtree, visitor);
+      }
 
-    if (!point) return;
-
-    //std::cerr << "entro con ese punto\n";
-
-    Node* child;
-    for (int ii = 0; ii < 8; ++ii) {
-      //std::cerr << "   para cada octante, ejm 4\n";
-      child = point->childs[ii];
-      if (!child) continue;
-
-      //std::cerr << "si el hijo es diferente de null\n";
-      
-      if (distance(origin->point, child->point) <= radio) {
-        //std::cerr << "inserta los que choquen con eje\n";
-        subtree.insert(child->point, child->val);
-        if (visitor) {
-          //std::cerr << "aplica funcion visitor a child\n";
-          visitor(NodeVisitor(child));
-        }
-
-        add_branch(subtree, child->childs[arr[ii][0]], visitor);
-        for (int jj = 0; jj != 8; ++jj) {
-          if (jj == arr[ii][0]) continue;
-          //std::cerr << "para cada subhijo, aceptado child, aplicara spheric_query\n";
-          spheric_query(origin, child->childs[jj], radio, subtree, visitor, arr);
-        }
-
-      } else {
-        for (int jj = 0; jj != 8; ++jj) {
-          if (jj == arr[ii][1]) continue;
-          //std::cerr << "para cada subhijo, rechazado child, aplica spheric_query\n";
-          spheric_query(origin, child->childs[jj], radio, subtree, visitor, arr);
-        }
+      if (n->point.y <= cube.max.y) {
+        if (n->point.z >= cube.min.z)
+          spheric_query(n->childs[4], sphere, subtree, visitor);
+        if (n->point.z <= cube.max.z)
+          spheric_query(n->childs[0], sphere, subtree, visitor);
       }
     }
   }
