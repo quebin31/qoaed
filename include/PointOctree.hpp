@@ -99,8 +99,9 @@ public:
   friend class PointOctree;
 
   private:
-    // min is the left bottom front point
-    // max is the rigth top back point
+    // min is one point in the bottom in any corner
+    // max is other point in the top in opposite to min point
+    // both need to form a diagonal
     Point min;
     Point max;
 
@@ -110,6 +111,14 @@ public:
     Cube(const CoordType& min_x, const CoordType& min_y, const CoordType& min_z,
          const CoordType& max_x, const CoordType& max_y, const CoordType& max_z) :
       min(min_x, min_y, min_z), max(max_x, max_y, max_z) {}
+
+    Cube(const CoordType& center, double radio) {
+      if (radio < 0) throw std::runtime_error("Radio cannot be negative");
+      if constexpr(!std::is_same<CoordType, double>::value && !std::is_same<CoordType, float>::value)
+        radio = std::round(radio);
+
+
+    }
 
     bool contains(const Point& p) const {
       bool cx, cy, cz;

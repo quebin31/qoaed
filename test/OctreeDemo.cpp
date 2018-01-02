@@ -38,12 +38,12 @@ void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {/
   }
 
   //ranged_query
-  //qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube cube(1,1,1,10,10,10);
-  //octree->ranged_query(cube, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
+  qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube cube(-3, -3, -3, 3, 3, 3);
+  octree->ranged_query(cube, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
 
   //spheric_query
-  qoaed::PointOctree<pcl::PointXYZRGB*, float>::Sphere sphere(nvis.get_point(), 100);
-  octree->spheric_query(sphere, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
+  //qoaed::PointOctree<pcl::PointXYZRGB*, float>::Sphere sphere(nvis.get_point(), 100);
+  //octree->spheric_query(sphere, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
 }
 
 int main(int argc, char** argv) {

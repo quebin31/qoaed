@@ -14,6 +14,10 @@ namespace qoaed {
 
 namespace tools {
 
+namespace constants {
+  const double sqrt_of_2 = 1.414213562373;
+}
+
 enum flags {
   EXPECTING_PROPERTIES = 0x0001,
   EXPECTING_VERTICES   = 0x0002,
