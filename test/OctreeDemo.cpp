@@ -28,10 +28,10 @@ void keyboard_events(const pcl::visualization::KeyboardEvent& e, void *p) {
   if (!e.keyUp()) return;
 
   auto keycode = e.getKeyCode();
-  if (keycode != 'r') return;
+  if (keycode != 'z') return;
 
   auto octree = *(std::shared_ptr<qoaed::PointOctree<pcl::PointXYZRGB*, float>>*) p;
-  octree->visit_dfs([](auto& p){ (*p)->r = 255; (*p)->g = 255; (*p)->r = 255; });
+  octree->visit_dfs([](auto& p){ (*p)->r = 255; (*p)->g = 255; (*p)->b = 255; });
   std::cout << "Restarted all points" << std::endl;
 }
 
@@ -110,6 +110,7 @@ int main(int argc, char** argv) {
 
 
     cloud_viewer.registerPointPickingCallback(point_pick_func, &octree);
+    cloud_viewer.registerKeyboardCallback(keyboard_events, &octree);
     cloud_viewer.showCloud(cloud);
     while (!cloud_viewer.wasStopped(100)) 
       cloud_viewer.showCloud(cloud);
