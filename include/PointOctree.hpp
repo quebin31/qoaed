@@ -121,7 +121,7 @@ public:
 
     Cube(const Point& center, double radio) {
       if (radio < 0) throw std::runtime_error("Radio cannot be negative");
-      if constexpr(!std::is_same<CoordType, double>::value && !std::is_same<CoordType, float>::value)
+      if (!std::is_same<CoordType, double>::value && !std::is_same<CoordType, float>::value)
         radio = std::round(radio);
 
       min.x = center.x - (CoordType) radio;
@@ -377,6 +377,152 @@ private:
       }
     }
   }
+  
+public:
+
+    double distance(Point a,Point b)
+   {
+       return sqrt(pow(b.x-a.x,2.0)+pow(b.y-a.y,2.0)+pow(b.z-a.z,2.0)); 
+   }
+   
+    void spheric_query_auxiliar(Node* n, const Sphere& sphere, PointOctree& subtree, const VisitorFunction& visitor, int avoid_octant) {
+    if (!n) return;
+
+    if (sphere.contains(n->point)) {
+      subtree.insert(n->point, n->val);
+      if (visitor)
+        visitor(NodeVisitor(n));
+    }
+
+    Cube cube(sphere.center, sphere.radio);
+
+    if (n->point.x >= cube.min.x) {
+      if (n->point.y >= cube.min.y) {
+        if (n->point.z >= cube.min.z && avoid_octant != 6)
+          spheric_query_auxiliar(n->childs[6], sphere, subtree, visitor,-1);
+        if (n->point.z <= cube.max.z && avoid_octant != 2)
+          spheric_query_auxiliar(n->childs[2], sphere, subtree, visitor,-1);
+      }
+
+      if (n->point.y <= cube.max.y) {
+        if (n->point.z >= cube.min.z && avoid_octant != 5)
+          spheric_query_auxiliar(n->childs[5], sphere, subtree, visitor,-1);
+        if (n->point.z <= cube.max.z  && avoid_octant != 1)
+          spheric_query_auxiliar(n->childs[1], sphere, subtree, visitor,-1);
+      }
+    }
+
+    if (n->point.x <= cube.max.x) {
+      if (n->point.y >= cube.min.y) {
+        if (n->point.z >= cube.min.z  && avoid_octant != 7)
+          spheric_query_auxiliar(n->childs[7], sphere, subtree, visitor, -1);
+        if (n->point.z <= cube.max.z && avoid_octant != 3)
+          spheric_query_auxiliar(n->childs[3], sphere, subtree, visitor, -1);
+      }
+
+      if (n->point.y <= cube.max.y) {
+        if (n->point.z >= cube.min.z && avoid_octant != 4)
+          spheric_query_auxiliar(n->childs[4], sphere, subtree, visitor, -1);
+        if (n->point.z <= cube.max.z && avoid_octant != 0)
+          spheric_query_auxiliar(n->childs[0], sphere, subtree, visitor, -1);
+      }
+    }
+  }
+   
+    bool padre_encierra_esfera(Point point, const double r, Point origin)
+    {
+        if(origin.x >= 0)
+        {
+            if(origin.y >=0)
+            {
+                if(origin.z >= 0)
+                    return (origin.x - r >= point.x && origin.y -r >= point.y && origin.z -r >= point.z);//0
+                else
+                    return (origin.x - r >= point.x && origin.y -r >= point.y && origin.z +r >= point.z);//4
+           }else
+           {
+                if(origin.z >= 0)
+                     return (origin.x - r >= point.x && origin.y +r >= point.y && origin.z -r >= point.z);//3
+                else
+                     return (origin.x - r >= point.x && origin.y +r >= point.y && origin.z +r >= point.z);//7
+           }
+        }
+        else
+        {
+            
+            if(origin.y >=0)
+            {
+                if(origin.z >= 0)
+                    return (origin.x + r >= point.x && origin.y -r >= point.y && origin.z -r >= point.z); //1
+                else
+                    return (origin.x + r >= point.x && origin.y -r >= point.y && origin.z +r >= point.z); //5
+           }else
+           {
+                if(origin.z >= 0)
+                     return (origin.x + r >= point.x && origin.y +r >= point.y && origin.z -r >= point.z); //2
+                else
+                     return (origin.x + r >= point.x && origin.y +r >= point.y && origin.z +r >= point.z); //6
+           }
+        }
+    }
+   
+    PointOctree spheric_query_inner(Point origin, const double radio, const VisitorFunction& visitor = [](auto& n){})
+    {
+        Node** node_point;
+        Node* node_parent;
+        find (origin, node_point, node_parent);//node_parent no es usado
+        
+        Node* padre = *node_point;     
+        PointOctree subtree;
+        int octante_hijo = -1;
+        int octante_complementario[8];
+        octante_complementario[0]= 6;
+        octante_complementario[6]= 0;
+        octante_complementario[4]= 2;
+        octante_complementario[2]= 4;
+        octante_complementario[5]= 3;
+        octante_complementario[3]= 5;
+        octante_complementario[1]= 7;
+        octante_complementario[7]= 1;
+        std::set<int> octantes_hallados;
+        
+        if(padre != nullptr){
+        
+            bool considera = true;
+            
+            while(true){
+              
+                if(considera){
+                    if(distance(padre->point, origin) <= radio) //ver si distancia de padre a origin esta dentro de radio
+                    {
+                        subtree.insert(padre->point, padre->val);
+                        if (visitor)
+                            visitor(NodeVisitor(padre));
+                    }
+                    
+                    Sphere sphere(origin, radio); 
+                    //ver si hijos de padre estan dentro de radio, escepto el hijo que es de octante_hijo
+                    spheric_query_auxiliar(padre, sphere, subtree, visitor, octante_hijo);
+                }
+                
+                if(padre->parent == nullptr) {return subtree;}
+                octante_hijo = what_octant(padre->point, padre->parent);
+                padre = padre->parent;
+                
+                if(padre_encierra_esfera(padre->point, radio, origin)){
+                    if(octantes_hallados.find(octante_complementario[octante_hijo]) != octantes_hallados.end())
+                        return subtree;
+                    else
+                    {
+                        octantes_hallados.insert(octante_hijo);
+                        considera = false;
+                    }
+                }
+        }
+        
+    }
+  }
+  
 };
 
 
