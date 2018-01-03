@@ -1,182 +1,224 @@
 #ifndef QOAED_REGION_OCTREE_HPP
 #define QOAED_REGION_OCTREE_HPP
 
-#include <map>
-#include <array>
-
 #include "Point.hpp"
+#include <iostream>
+#include <map>
 
-namespace qoaed {
-template <class Value, class Key = long>
-class RegionOctree {
-private:
-
-  struct Obj {
-    Point3D<Key> point;
-    mutable Value val;
-
-    Obj(const Key& x, const Key& y,const Key& z, const Value& val) :
-    point(x,y,z), val(val) {}
-  };
-
-  struct Node;
-  using Childs = typename std::array<Node*, 8>;
-  using Box    = typename std::map<Key, std::map<Key, std::map<Key, Obj> > >;
-
-  struct Node {
-    Point3D<Key> min;
-    Point3D<Key> max;
-    Childs  childs;
-    Box     box;
-
-    Node(const Key& minx, const Key& miny, const Key& minz, const Key& maxx, const Key& maxy, const Key& maxz) :
-      min(minx,miny,minz), max(maxx,maxy,maxz)
-      { childs = {0, 0, 0, 0, 0, 0, 0, 0}; }
-
-    void insert(const Point3D<Key>& p, const Value& val) {
-      auto xit = box.find(p.x);
-      if (xit == box.end()) {
-        auto insertedx = box.emplace(p.x, std::map<Key,std::map<Key, Obj>() >());
-        auto yit = insertedx->second.find(p.y);
-        if(yit == insertedx->second.end()){
-          auto insertedy = insertedx.emplace(p.y, std::map<Key,Obj>());
-          std::get<0>(insertedy)->second.emplace(p.z, Obj(p.x,p.y,p.z,val));
-        } else{
-          auto zit = yit->second.find(p.z);
-          if(zit==yit->second.end()){
-            zit->second.emplace(p.z, Obj(p.x,p.y,p.z,val));
-          } else {
-            return;
-          }
-        }
-      } else {
-        auto yit = xit->second.find(p.y);
-        if (yit == xit->second.end())
-          xit->second.emplace(p.y, Obj(p.x,p.y,p.z,val));
-        else
-          return;
-      }
-    }
-
-    void remove(const Point3D<Key>& p) {
-      auto xit = box.find(p.x);
-      if (xit == box.end()) return;
-
-      auto yit = xit->second.find(p.y);
-      if (yit == xit->second.end()) return;
-
-      auto zit = yit->second.find(p.z);
-      if (zit == yit->second.end()) return;
-
-      yit->second.erase(zit);
-      if(yit->second.empty()){
-        xit->second.erase(yit);
-        if (xit->second.empty())
-          box.erase(xit);
-      }
-    }
-
-    const Obj& find(const Point3D<Key>& p) {
-      auto xit = box.find(p.x);
-      if (xit == box.end())
-        throw std::runtime_error("Cannot found x coord");
-
-      auto yit = xit->second.find(p.y);
-      if (yit == xit->second.end())
-        throw std::runtime_error("Cannot found y coord");
-
-      auto zit = yit->second.find(p.z);
-      if(zit == yit->second.end())
-        throw std:: runtime_error("Cannot found z coord");
-
-      return zit->second;
-    }
-
-    // A leaf node doesn't has childs
-    // A non-leaf node has all its childs
-    bool is_leaf() { return !((bool) childs[0]); }
-  };
-
-  Node* m_root;
-
+template <class Value, class CoordType=long>
+class RegionOctree{
 public:
-  RegionOctree(const Point3D<Key>& p) : m_root(new Node(0, 0, 0, p.x, p.y, p.z)) {}
- ~RegionOctree() = default;
-
-  void insert(const Point3D<Key>& p, const Value& val) {
-    Node** tmp;
-    if (find(p.x,p.y,p.z,tmp)) return;
-    (*tmp) = new Node(p.x,p.y,p.z,val);
-  }
-  void insert(const Key& x, const Key& y, const Key& z, Value& val){
-    insert(Point3D<Key>(x,y,z), val);
-  }
+	using Point = Point3D<CoordType>;
 
 private:
 
-  bool find(const Point3D<Key>& p, Node**& node) {
-    node = &m_root;
-    while (*node) {
-      try {
-        (*node)->find(p);
-        return true;
-      } catch(std::exception& e) {
-        int pos = what_quadrant(p,*node);
-        node=&((*node)->childs[pos]);
-      }
+	struct Obj{
+		Point point;
+		Value value;
+		Obj(const Point& point, const Value& value): point(point), value(value) {}
+		Obj(const CoordType& x, const CoordType& y, const CoordType& z, const Value& value) : 
+		point(x,y,z), value(value) {} 
+	};
+
+	struct Octant;
+	using Childs = typename std::array<Octant*, 8>;
+	using Box = typename std::map<CoordType, std::map<CoordType, std::map<CoordType, Obj> > >;
+
+	struct Octant{
+		Point min;
+		Point max;
+		Childs childs;
+		Box box;
+		int s;
+		Octant(const Point& min, const Point& max) : min(min), max(max), s(0) {
+			for(int i=0; i<8; i++)
+				childs[i]=0;
+		}
+		Octant (const CoordType& minx, const CoordType& miny, const CoordType& minz, 
+			   	const CoordType& maxx, const CoordType& maxy, const CoordType& maxz) :
+			   	min(minx,miny,minz), max(maxx, maxy, maxz), s(0) {
+			for(int i=0; i<8; i++)
+				childs[i]=0;			   		
+		}
+
+	    void insert(const Point& p, const Value& val) {
+	    	s++;
+	    }
+
+	    void insert(const CoordType& x, const CoordType& y, const CoordType& z, const Value& val){
+	      	insert(Point(x,y,z), val);
+	    }
+
+	    void remove(const Point& p) {
+			auto xit = box.find(p.x);
+			if (xit == box.end()) return;
+
+			auto yit = xit->second.find(p.y);
+			if (yit == xit->second.end()) return;
+
+			auto zit = yit->second.find(p.z);
+			if (zit == yit->second.end()) return;
+
+			yit->second.erase(zit);
+			if(yit->second.empty()){
+			xit->second.erase(yit);
+			if (xit->second.empty())
+			  box.erase(xit);
+			}
+	    }
+
+	    void remove(const CoordType& x, const CoordType& y, const CoordType& z, Value& val){
+	      	remove(Point(x,y,z));
+	    }
+
+		const Obj& find(const Point& p) {
+			auto xit = box.find(p.x);
+			if (xit == box.end())
+			throw std::runtime_error("Cannot found x coord");
+
+			auto yit = xit->second.find(p.y);
+			if (yit == xit->second.end())
+			throw std::runtime_error("Cannot found y coord");
+
+			auto zit = yit->second.find(p.z);
+			if(zit == yit->second.end())
+			throw std:: runtime_error("Cannot found z coord");
+
+			return zit->second;
+		}
+
+		bool contains(const Point& p) const {
+			bool cx, cy, cz;
+			cx = (p.x<= max.x && p.x >min.x);
+			cy = (p.y<= max.y && p.y >min.y);
+			cz = (p.z<= max.z && p.z >=min.z);
+
+			return cx && cy && cz;
+		}
+
+		bool contains(const CoordType& x, const CoordType& y, const CoordType& z) const { return contains(Point(x,y,z)); }
+
+	};
+public:
+	class OctantVisitor {
+	friend class RegionOctree;
+	private:
+		Octant* o;
+	public:
+		OctantVisitor(Octant* o) : o(o) {}
+
+		const Point& get_PointMin() const { return o->min; }
+		const Point& get_PointMax() const { return o->max; }
+		operator bool() const { return (bool) o; } 
+
+	};
+
+	class Cube {
+	friend class RegionOctree;
+	private:
+		Point min;
+		Point max;
+	public:
+		Cube(const Point& bot, const Point& top) {
+			min.x = std::min(bot.x, top.x);
+			min.y = std::min(bot.y, top.y);
+			min.z = std::min(bot.z, top.z);
+
+			max.x = std::min(bot.x, top.x);
+			max.y = std::min(bot.y, top.y);
+			max.z = std::min(bot.z, top.z);
+		}
+
+		Cube(const CoordType& bx, const CoordType& by, const CoordType& bz,
+			const CoordType& tx, const CoordType& ty, const CoordType& tz) :
+			Cube(Point(bx,by,bz), Point(tx,ty,tz)) {}
+		Cube(const Point& center, double radio){
+			if(radio<0) throw std::runtime_error("Radio cannot be negative");
+
+		}
+	};
+private:
+	Octant* m_root;
+public:
+	RegionOctree() : m_root(nullptr) {}
+	~RegionOctree() = default;
+	
+	void insert(const Point& p, const Value& val) {
+    	Octant** tmp;
+    	if (find(p.x,p.y,p.z,tmp)) return;
+    	if ((*tmp)->s < 100){
+    		//(*tmp)->insert(p,val);	
+    	}
+    	//subdivide((*tmp));
+    	//int pos = what_octant(p, (*tmp));
+    	//(*tmp)->childs[pos]->insert(p, val);
+  	}
+
+  	void insert(const CoordType& x, const CoordType& y, const CoordType& z,const Value& val){
+    	insert(Point(x,y,z), val);
+  	}
+private:
+  	bool find(const Point& p, Octant**& octant) {
+    	octant = &m_root;
+    	while (*octant) {
+      		try {
+        		(*octant)->find(p);
+        		return true;
+      		} catch(std::exception& e) {
+        		int pos = what_octant(p,*octant);
+        		octant=&((*octant)->childs[pos]);
+      		}
+    	}
+    	return false;
     }
-    return false;
-  }
 
-  bool find(const Key& x, const Key& y,const Key& z, Node**& node){
-    return find(Point3D<Key>(x,y,z), node);
-  }
+  	bool find(const CoordType& x, const CoordType& y,const CoordType& z, Octant**& octant){
+    	return find(Point(x,y,z), octant);
+  	}
 
-  int what_octant(const Point3D<Key>& p, Node* n) {
-      Key middle_x = (n->min_x + n->max_x)/Key(2);
-      Key middle_y = (n->min_y + n->max_y)/Key(2);
-      Key middle_z = (n->min_z + n->max_z)/Key(2);
+  	int what_octant(const Point& p, Octant* n) {
+      	CoordType middle_x = (n->min.x + n->max.x)/CoordType(2);
+      	CoordType middle_y = (n->min.y + n->max.y)/CoordType(2);
+      	CoordType middle_z = (n->min.z + n->max.z)/CoordType(2);
 
-      // TODO: Esta bien que todas las comparaciones sean menor o igual ; mayor o igual?
-      if(p.z>=n->min_z && p.z<=middle_z){
-        if(p.x>=middle_x && p.x<=n->max_x){
-            if(p.y>=middle_y && p.y<=n->max_y) return 0;
-            else if(p.y>=n->min_y && p.y<middle_y) return 3;
+      	// TODO: Esta bien que todas las comparaciones sean menor o igual ; mayor o igual?
+      if(p.z>=n->min.z && p.z<=middle_z){
+        if(p.x>=middle_x && p.x<=n->max.x){
+            if(p.y>=middle_y && p.y<=n->max.y) return 0;
+            else if(p.y>=n->min.y && p.y<middle_y) return 3;
         }
-        else if(p.x>=n->min_x && p.x<middle_x){
-            if(p.y>=middle_y && p.y<=n->max_y) return 1;
-            else if(p.y>=n->min_y && p.y<middle_y) return 2;
+        else if(p.x>=n->min.x && p.x<middle_x){
+            if(p.y>=middle_y && p.y<=n->max.y) return 1;
+            else if(p.y>=n->min.y && p.y<middle_y) return 2;
         }
       }
-      else if(p.z>middle_z && p.z<=n->max_z){
-        if(p.x>=middle_x && p.x<=n->max_x){
-            if(p.y>=middle_y && p.y<=n->max_y) return 5;
-            else if(p.y>=n->min_y && p.y<middle_y) return 4;
+      else if(p.z>middle_z && p.z<=n->max.z){
+        if(p.x>=middle_x && p.x<=n->max.x){
+            if(p.y>=middle_y && p.y<=n->max.y) return 5;
+            else if(p.y>=n->min.y && p.y<middle_y) return 4;
         }
-        else if(p.x>=n->min_x && p.x<middle_x){
-            if(p.y>=middle_y && p.y<=n->max_y) return 6;
-            else if(p.y>=n->min_y && p.y<middle_y) return 7;
+        else if(p.x>=n->min.x && p.x<middle_x){
+            if(p.y>=middle_y && p.y<=n->max.y) return 6;
+            else if(p.y>=n->min.y && p.y<middle_y) return 7;
         }
       }
-  }
+  	}
 
-  void subdivide(Node* n) {
-    Key middle_x = (n->min_x + n->max_x)/Key(2);
-    Key middle_y = (n->min_y + n->max_y)/Key(2);
-    Key middle_z = (n->min_z + n->max_z)/Key(2);
+  	void subdivide(Octant* &n) {
+	    CoordType middle_x = (n->min.x + n->max.x)/CoordType(2);
+	    CoordType middle_y = (n->min.y + n->max.y)/CoordType(2);
+	    CoordType middle_z = (n->min.z + n->max.z)/CoordType(2);
 
-    n->childs[0] = new Node(middle_x, middle_y, n->min_z, n->max_x, n->max_y, middle_z);
-    n->childs[1] = new Node(n->min_x, middle_y, n->min_z, middle_x, n->max_y, middle_z);
-    n->childs[2] = new Node(n->min_x, n->min_y, n->min_z, middle_x, middle_y, middle_z);
-    n->childs[3] = new Node(middle_x, n->min_y, n->min_z, n->max_x, middle_y, middle_z);
+	    n->childs[0] = new Octant(middle_x, middle_y, n->min.z, n->max.x, n->max.y, middle_z);
+	    n->childs[1] = new Octant(n->min.x, middle_y, n->min.z, middle_x, n->max.y, middle_z);
+	    n->childs[2] = new Octant(n->min.x, n->min.y, n->min.z, middle_x, middle_y, middle_z);
+	    n->childs[3] = new Octant(middle_x, n->min.y, n->min.z, n->max.x, middle_y, middle_z);
 
-    n->childs[4] = new Node(middle_x, n->min_y, middle_z, n->max_x, middle_y, n->max_z);
-    n->childs[5] = new Node(middle_x, middle_y, middle_z, n->max_x, n->max_y, n->max_z);
-    n->childs[6] = new Node(n->min_x, middle_y, middle_z, middle_x, n->max_y, n->max_z);
-    n->childs[7] = new Node(n->min_x, n->min_y, middle_z, middle_x, middle_y, n->max_z);
-  }
-
+	    n->childs[4] = new Octant(middle_x, n->min.y, middle_z, n->max.x, middle_y, n->max.z);
+	    n->childs[5] = new Octant(middle_x, middle_y, middle_z, n->max.x, n->max.y, n->max.z);
+	    n->childs[6] = new Octant(n->min.x, middle_y, middle_z, middle_x, n->max.y, n->max.z);
+	    n->childs[7] = new Octant(n->min.x, n->min.y, middle_z, middle_x, middle_y, n->max.z);
+  	}
 };
-}
 
 #endif
