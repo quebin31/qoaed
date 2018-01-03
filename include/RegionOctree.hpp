@@ -29,7 +29,6 @@ private:
 		Point max;
 		Childs childs;
 		Box box;
-		int s;
 		Octant(const Point& min, const Point& max) : min(min), max(max), s(0) {
 			for(int i=0; i<8; i++)
 				childs[i]=0;
@@ -42,7 +41,28 @@ private:
 		}
 
 	    void insert(const Point& p, const Value& val) {
-	    	s++;
+	    	auto xit = box.find(p.x);
+	    	if(xit == box.end()){
+	    		auto insertedx = box.emplace(p.x, std::map<CoordType, std::map<CoordType, Obj> >() );
+	    		auto yit = std::get<0>(insertedx)->second.find(p.y);
+	    		if(yit == std::get<0>(insertedx)->second.end()){
+	    			auto insertedy = std::get<0>(insertedx)->second.emplace(p.y, std::map<CoordType, Obj>());
+	    			std::get<0>(insertedy)->second.emplace(p.z, Obj(p, val));
+	    		}
+	   			else{
+	   				yit->second.emplace(p.z, Obj(p, val));
+	   			}
+	    	}
+	    	else{
+	    		auto yit = xit->second.find(p.y);
+	    		if(yit == xit->second.end()){
+	    			auto insertedy = xit->second.emplace(p.y, std::map<CoordType, Obj>()); 
+	    			std::get<0>(insertedy)->second.emplace(p.z, Obj(p, val));
+	    		}
+	    		else{
+	    			yit->second.emplace(p.z, Obj(p, val));
+	    		}
+	    	}
 	    }
 
 	    void insert(const CoordType& x, const CoordType& y, const CoordType& z, const Value& val){
