@@ -31,7 +31,7 @@ void keyboard_events(const pcl::visualization::KeyboardEvent& e, void *p) {
   if (keycode != 'z') return;
 
   auto octree = *(std::shared_ptr<qoaed::PointOctree<pcl::PointXYZRGB*, float>>*) p;
-  octree->visit_dfs([](auto& p){ (*p)->r = 255; (*p)->g = 255; (*p)->b = 255; });
+  octree->visit_dfs([](auto& p){ (*p)->r = 255; (*p)->g = 255; (*p)->b = 255; (*p)->a = 100; });
   std::cout << "Restarted all points" << std::endl;
 }
 
@@ -54,12 +54,12 @@ void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {
   std::cin  >> radio;
 
   //cubic_query
-  qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube cube(nvis.get_point(), radio);
-  octree->cubic_query(cube, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
+  //qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube cube(nvis.get_point(), radio);
+  //octree->cubic_query(cube, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
 
   //spheric_query
-  //qoaed::PointOctree<pcl::PointXYZRGB*, float>::Sphere sphere(nvis.get_point(), radio);
-  //octree->spheric_query(sphere, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
+  qoaed::PointOctree<pcl::PointXYZRGB*, float>::Sphere sphere(nvis.get_point(), radio);
+  octree->spheric_query(sphere, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
 }
 
 int main(int argc, char** argv) {
