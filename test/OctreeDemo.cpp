@@ -31,7 +31,7 @@ void keyboard_events(const pcl::visualization::KeyboardEvent& e, void *p) {
   if (keycode != 'z') return;
 
   auto octree = *(std::shared_ptr<qoaed::PointOctree<pcl::PointXYZRGB*, float>>*) p;
-  octree->visit_dfs([](auto& p){ (*p)->r = 255; (*p)->g = 255; (*p)->b = 255; });
+  octree->visit_dfs([](auto& p){ (*p)->r = 255; (*p)->g = 255; (*p)->b = 255; (*p)->a = 100; });
   std::cout << "Restarted all points" << std::endl;
 }
 
@@ -53,7 +53,7 @@ void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {
   std::cout << "Input a radio: ";
   std::cin  >> radio;
 
-  //ranged_query
+  //cubic_query
   //qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube cube(nvis.get_point(), radio);
   //octree->cubic_query(cube, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
 
