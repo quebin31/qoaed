@@ -39,6 +39,11 @@ Si quieres usar estas implementaciones en otros proyectos asegúrate de que conf
 carpeta `include` como una ruta de inclusión cuando estes compilando tu proyecto, o
 simplemente copia los archivos en `include` en la carpeta de tu proyecto.
 
+## Contributors / Contribuidores
+- [lans98](https://github.com/lans98)
+- [k-st](https://github.com/k-st)
+- [MBlev](https://github.com/MBlev)
+
 ## Further read / Lectura profunda
 - [Slides on Google](https://docs.google.com/presentation/d/1YjIul8P9xd02vFztmL2MrrHZWiIlwffryJpgWpFVpxM/edit?usp=sharing)
 - [Video on Youtube]()
