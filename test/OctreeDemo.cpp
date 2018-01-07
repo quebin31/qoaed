@@ -9,12 +9,18 @@
 namespace global {
   int    argc;
   char** argv;
+  
+  enum Method {
+    cubic, spheric, spheric_inner
+  };
+
+  Method method = cubic;
 }
 
 void show_help() {
   std::cout << "|- Octree Demo -|\n";
-  std::cout << " Usage: " << global::argv[0] << '\n';
-  std::cout << " Example: " << global::argv[0] << " cube.off\n";
+  std::cout << "Usage: " << global::argv[0] << '\n';
+  std::cout << "Example: " << global::argv[0] << " cube.off [--cube | --spheric | --spheric-inner]\n";
   std::cout << "\t-h    Muestra esta ayuda\n";
   std::cout << "\t-v    Muestra version\n";
 }
@@ -22,6 +28,20 @@ void show_help() {
 void show_version() {
   std::cout << "Octree demo\n";
   std::cout << "version: 0.0.1\n";
+}
+
+void get_method() {
+  if (!global::argv[2]) return;
+
+  if (std::strcmp(global::argv[2], "--cube") == 0) { 
+    global::method = global::cubic;
+  } else if (std::strcmp(global::argv[2], "--spheric") == 0) {
+    global::method = global::spheric;
+  } else if (std::strcmp(global::argv[2], "--spheric-inner") == 0) {
+    global::method = global::spheric_inner;
+  } else {
+    throw std::runtime_error("Unknown method for query");
+  }
 }
 
 void keyboard_events(const pcl::visualization::KeyboardEvent& e, void *p) {
@@ -53,16 +73,15 @@ void point_pick_func(const pcl::visualization::PointPickingEvent& e, void* p) {
   std::cout << "Input a radio: ";
   std::cin  >> radio;
 
-  //cubic_query
-  //qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube cube(nvis.get_point(), radio);
-  //octree->cubic_query(cube, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
-
-  //spheric_query
-//  qoaed::PointOctree<pcl::PointXYZRGB*, float>::Sphere sphere(nvis.get_point(), radio);
-//  octree->spheric_query(sphere, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
-  
-  //spheric_query_inner
-  octree->spheric_query_inner(nvis.get_point(), radio,  [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
+  if (global::method == global::cubic) {
+    qoaed::PointOctree<pcl::PointXYZRGB*, float>::Cube cube(nvis.get_point(), radio);
+    octree->cubic_query(cube, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
+  } else if (global::method == global::spheric) {
+    qoaed::PointOctree<pcl::PointXYZRGB*, float>::Sphere sphere(nvis.get_point(), radio);
+    octree->spheric_query(sphere, [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
+  } else {
+    octree->spheric_query_inner(nvis.get_point(), radio,  [](auto& p) { (*p)->r = 255; (*p)->g = 0; (*p)->b = 0; });
+  }
 }
 
 int main(int argc, char** argv) {
@@ -82,6 +101,14 @@ int main(int argc, char** argv) {
   if (std::strcmp(argv[1], "-v") == 0) {
     show_version();
     return 0;
+  }
+
+  try {
+    get_method();
+  } catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    show_help();
+    return 1;
   }
 
   try {
