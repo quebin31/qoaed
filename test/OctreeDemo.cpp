@@ -18,11 +18,11 @@ namespace global {
 }
 
 void show_help() {
-  std::cout << "|- Octree Demo -|\n";
-  std::cout << "Usage: " << global::argv[0] << '\n';
-  std::cout << "Example: " << global::argv[0] << " cube.off [--cube | --spheric | --spheric-inner]\n";
-  std::cout << "\t-h    Muestra esta ayuda\n";
-  std::cout << "\t-v    Muestra version\n";
+  std::cout << "Octree Demo\n";
+  std::cout << "Usage: " << global::argv[0] << " file.off [--cube | --spheric | --spheric-inner]\n";
+  std::cout << "Example: " << global::argv[0] << " cube.off --cube\n";
+  std::cout << "  -h    Muestra esta ayuda\n";
+  std::cout << "  -v    Muestra version\n";
 }
 
 void show_version() {
