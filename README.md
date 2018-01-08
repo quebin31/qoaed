@@ -46,4 +46,4 @@ simplemente copia los archivos en `include` en la carpeta de tu proyecto.
 
 ## Further read / Lectura profunda
 - [Slides on Google](https://docs.google.com/presentation/d/1YjIul8P9xd02vFztmL2MrrHZWiIlwffryJpgWpFVpxM/edit?usp=sharing)
-- [Video on Youtube]()
+- [Video on Youtube](https://www.youtube.com/watch?v=ITGjyHDG5yQ)
