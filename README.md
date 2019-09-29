@@ -41,7 +41,7 @@ simplemente copia los archivos en `include` en la carpeta de tu proyecto.
 
 ## Contributors / Contribuidores
 - [lans98](https://github.com/lans98)
-- [k-st](https://github.com/k-st)
+- [kevin-salazar](https://github.com/kevin-salazar)
 - [MBlev](https://github.com/MBlev)
 
 ## Further read / Lectura profunda
