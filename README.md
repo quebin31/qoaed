@@ -40,7 +40,7 @@ carpeta `include` como una ruta de inclusión cuando estes compilando tu proyect
 simplemente copia los archivos en `include` en la carpeta de tu proyecto.
 
 ## Contributors / Contribuidores
-- [lans98](https://github.com/lans98)
+- [quebin31](https://github.com/quebin31)
 - [kevin-salazar](https://github.com/kevin-salazar)
 - [MBlev](https://github.com/MBlev)
 
